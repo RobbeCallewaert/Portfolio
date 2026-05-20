@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Robbe Callewaert — CGI & Motion Systems</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-alpha0: rgba(255,255,255,0);
+    --ink: #0a0a0a;
+    --ink-soft: #777777;
+    --ink-faint: #cfcfcf;
+    --surface: #f3f3f3;
+
+    --slot-w: 900px;
+    --slot-h: 900px;
+    --slot-pitch: 1140px;       /* 900 + 240 whitespace */
+
+    --img-scale-base: 0.55;
+    --img-scale-active: 1;
+  }
+
+  body.dark {
+    --bg: #0a0a0a;
+    --bg-alpha0: rgba(10,10,10,0);
+    --ink: #ffffff;
+    --ink-soft: #888888;
+    --ink-faint: #666666;
+    --surface: #1c1c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { cursor: default; }
+
+  /* Keep page scrollable (ScrollTrigger needs it) but hide the scrollbar */
+  html { scrollbar-width: none; }              /* Firefox */
+  body::-webkit-scrollbar { width: 0; height: 0; background: transparent; }  /* Chrome/Safari */
+  body { -ms-overflow-style: none; }           /* IE/old Edge */
+
+  /* ─── EDGE GRADIENTS ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    left: 0; right: 0;
+    pointer-events: none;
+    bottom: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 45; /* above corners (30) and view-toggle (40), pointer-events: none so clicks still work */
+  }
+  .top-gradient {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 140px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 45; /* below header (50), above gallery */
+    pointer-events: none;
+    view-transition-name: top-gradient;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 28px 36px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 50;
+    view-transition-name: site-header;
+    pointer-events: none;
+  }
+  header > * { pointer-events: auto; }
+  .logo {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+  nav { display: flex; gap: 36px; }
+  nav a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+    font-variation-settings: "wght" 600, "wdth" 100;
+    position: relative;
+  }
+  nav a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width 0.5s cubic-bezier(.7,0,.3,1);
+  }
+  nav a:hover::after { width: 100%; }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--ink-soft);
+    pointer-events: auto;
+    line-height: 0;
+    transition: color 200ms ease;
+  }
+  .theme-toggle:hover { color: var(--ink); }
+  .theme-toggle svg { width: 15px; height: 15px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  body.dark .theme-toggle .icon-moon { display: none; }
+  body.dark .theme-toggle .icon-sun  { display: block; }
+
+  /* ─── GALLERY ─── */
+  .gallery {
+    position: relative;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+  }
+  .stage {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  /* ─── STRIP ─── */
+  .strip { cursor: none; } /* hides native cursor so SCROLL label can take over */
+  .strip .thumb { cursor: pointer; } /* restore pointer on thumbnails */
+
+  .strip {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    height: var(--slot-h);
+    display: flex;
+    align-items: center;
+    transform: translate(-50%, -50%);
+    will-change: transform;
+  }
+
+  .slot {
+    flex-shrink: 0;
+    width: var(--slot-pitch);
+    height: var(--slot-h);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .thumb {
+    width: var(--slot-w);
+    height: var(--slot-h);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    transform: scale(var(--scale, 0.55));
+    transform-origin: center center;
+    will-change: transform;
+  }
+
+  .slot.is-hot { cursor: pointer; }
+
+  .thumb img {
+    transition: transform 600ms cubic-bezier(.65,0,.2,1);
+  }
+  .thumb:hover img { transform: scale(1.03); }
+
+  .thumb-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.85);
+    font-variation-settings: "wght" 600, "wdth" 100;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    text-align: center;
+    padding: 12px;
+  }
+
+  /* ─── LABELS ───
+     The labels sit below the active thumb. Each row clips overflow:hidden so
+     the slide-up animation is masked. Two stacked spans (.current + .next)
+     swap during transitions.
+  */
+  .labels {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, calc(-50% + var(--slot-h) / 2 + 56px));
+    z-index: 5;
+    pointer-events: none;
+    text-align: center;
+  }
+  .label-row {
+    height: 1.4em;
+    overflow: hidden;
+    white-space: nowrap;
+    /* the row itself is just a clipping window */
+  }
+  .brand-line {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .title-line {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 18px;
+    color: var(--ink-soft);
+    margin-top: 10px;
+  }
+  .label-row .stack {
+    display: flex;
+    flex-direction: column;
+    /* transform animated via JS-controlled class — no auto-transition while we're resetting */
+  }
+  .label-row.animating .stack {
+    transition: transform 360ms cubic-bezier(.65,0,.2,1);
+  }
+  .label-row.animating span {
+    transition: opacity 360ms cubic-bezier(.65,0,.2,1);
+  }
+  .label-row span {
+    display: block;
+    line-height: 1.4em;
+    height: 1.4em;
+  }
+  .label-row .next { opacity: 0; }
+  .label-row.swapping .stack { transform: translateY(-1.4em); }
+  .label-row.swapping .current { opacity: 0; }
+  .label-row.swapping .next    { opacity: 1; }
+
+  /* ─── CURSOR ─── */
+  .cursor {
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 200ms ease;
+    will-change: transform;
+  }
+  .cursor.show { opacity: 1; }
+  .cursor-label {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 100px;
+    padding: 9px 16px;
+    font-size: 10px;
+    font-variation-settings: "wght" 700, "wdth" 100;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+  }
+
+  /* ─── CORNERS ─── */
+  .corner {
+    position: fixed;
+    bottom: 26px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    font-variation-settings: "wght" 400, "wdth" 100;
+    z-index: 30;
+  }
+  .corner.left { left: 36px; }
+  .corner.right { right: 36px; }
+  .corner a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .corner a:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  /* ─── SINGLE VIEW TOGGLE ─── */
+  .view-toggle {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 40;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "wght" 600, "wdth" 100;
+    padding: 6px 14px;
+    letter-spacing: 0.02em;
+    transition: opacity 0.3s ease;
+  }
+  .view-toggle::after {
+    content: "";
+    position: absolute;
+    left: 14px; right: 14px;
+    bottom: 4px;
+    height: 1px;
+    background: var(--ink);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.4s cubic-bezier(.7,0,.3,1);
+  }
+  .view-toggle:hover::after { transform: scaleX(1); }
+
+  /* ─── GRID VIEW ─── */
+  .grid-view {
+    position: relative;
+    padding: 100px 80px 120px;
+    display: none;
+    background: var(--bg);
+    min-height: 100vh;
+  }
+  body.in-grid .grid-view { display: block; }
+  body.in-grid .gallery { display: none; }
+  body.in-grid .corner.right { display: none; } /* hide bottom-right copyright in grid since it would overlap on long pages — we'll add a footer instead */
+
+  .grid-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 32px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  .grid-item {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+  .grid-thumb {
+    aspect-ratio: 1 / 1;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    transform: scale(1);
+    transition: transform 0.5s cubic-bezier(.65,0,.2,1);
+  }
+  .grid-item:hover .grid-thumb { transform: scale(0.97); }
+  .grid-meta {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .grid-meta .b {
+    font-variation-settings: "wght" 600, "wdth" 100;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+  }
+  .grid-meta .t {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .grid-footer {
+    margin-top: 80px;
+    padding: 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-top: 1px solid var(--ink-faint);
+    max-width: 1600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .grid-footer a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .grid-footer a:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  /* ─── REVEAL ─── */
+  .strip, .corner, header, .labels, .view-toggle {
+    opacity: 0;
+    animation: fadeIn 1s cubic-bezier(.65,0,.2,1) forwards;
+  }
+  header { animation-delay: 0.05s; }
+  .strip { animation-delay: 0.2s; }
+  .labels { animation-delay: 0.4s; }
+  .corner, .view-toggle { animation-delay: 0.6s; }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    body { cursor: auto; }
+    .cursor { display: none; }
+    .gallery { display: none !important; }
+    .grid-view { display: block; padding: 80px 16px 80px; }
+    .view-toggle { display: none; }
+    .corner { display: none; }
+  }
+
+  /* ─── VIEW TRANSITIONS ─── */
+  @view-transition { navigation: auto; }
+
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+  /* Back-navigation: fade the captured hero out over a slightly longer window */
+  ::view-transition-group(project-hero) {
+    animation-duration: 400ms;
+    animation-timing-function: ease;
+  }
+  /* Header persists across the transition */
+  ::view-transition-group(site-header) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+  /* Top gradient persists across the transition */
+  ::view-transition-group(top-gradient) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+</style>
+</head>
+<body>
+<script>if (localStorage.getItem('rc_theme') === 'dark') document.body.classList.add('dark');</script>
+
+<div class="top-gradient"></div>
+
+<header>
+  <div class="logo">
+    Robbe Callewaert
+  </div>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+  </button>
+  <nav>
+    <a href="index.html">work</a>
+    <a href="info.html">info</a>
+  </nav>
+</header>
+
+<!-- CAROUSEL VIEW -->
+<div class="gallery" id="gallery">
+  <div class="stage">
+    <div class="strip" id="strip"></div>
+
+    <div class="labels">
+      <div class="label-row brand-line animating" id="brandRow">
+        <div class="stack">
+          <span class="current">The North Face</span>
+          <span class="next"></span>
+        </div>
+      </div>
+      <div class="label-row title-line animating" id="titleRow">
+        <div class="stack">
+          <span class="current">Altamesa 500 V2</span>
+          <span class="next"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRID VIEW -->
+<div class="grid-view" id="gridView">
+  <div class="grid-list" id="gridList"></div>
+  <div class="grid-footer">
+    <a href="https://instagram.com" target="_blank">Instagram ↗</a>
+    <span>©2026 Robbe Callewaert</span>
+  </div>
+</div>
+
+<div class="corner left"><a href="https://instagram.com" target="_blank">Instagram ↗</a></div>
+<div class="corner right">©2026 Robbe Callewaert</div>
+
+<button class="view-toggle" id="viewToggle">Grid</button>
+
+<div class="cursor" id="cursor">
+  <div class="cursor-label">SCROLL</div>
+</div>
+
+<script src="transition.js"></script>
+<script src="projects.js"></script>
+<script>
+  gsap.registerPlugin(ScrollTrigger);
+
+  const projects = PROJECTS;
+
+  const projN = projects.length;
+  const strip = document.getElementById('strip');
+  const brandRow = document.getElementById('brandRow');
+  const titleRow = document.getElementById('titleRow');
+  const cursor = document.getElementById('cursor');
+
+  function getDims() {
+    const root = getComputedStyle(document.documentElement);
+    const probe = document.createElement('div');
+    probe.style.cssText = `position:absolute;visibility:hidden;width:${root.getPropertyValue('--slot-pitch')};`;
+    document.body.appendChild(probe);
+    const slotPitch = probe.offsetWidth;
+    probe.remove();
+    return { slotPitch };
+  }
+  let dims = getDims();
+
+  /* BUILD CAROUSEL */
+  const REPEATS = 21;
+  const CENTER_REPEAT = Math.floor(REPEATS / 2);
+  const centerListIdx = CENTER_REPEAT * projN;
+
+  const renderList = [];
+  for (let r = 0; r < REPEATS; r++) projects.forEach(p => renderList.push(p));
+
+  renderList.forEach((p, i) => {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.idx = i;
+    slot.dataset.key = p.key;
+    slot.dataset.projectIdx = i % projN;
+    slot.innerHTML = `
+      <div class="thumb" style="background:${p.color};">
+        ${p.thumb
+          ? `<img src="${p.thumb}" alt="${p.brand}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`
+          : `<div class="thumb-placeholder">${p.brand}</div>`
+        }
+      </div>
+    `;
+    strip.appendChild(slot);
+  });
+
+  const slots = Array.from(strip.querySelectorAll('.slot'));
+  const thumbs = slots.map(s => s.querySelector('.thumb'));
+
+  /* BUILD GRID */
+  const gridList = document.getElementById('gridList');
+  projects.forEach(p => {
+    const a = document.createElement('a');
+    a.className = 'grid-item';
+    a.href = `project.html?key=${p.key}`;
+    a.innerHTML = `
+      <div class="grid-thumb" style="background:${p.color};">
+        ${p.thumb
+          ? `<img src="${p.thumb}" alt="${p.brand}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`
+          : `<div class="thumb-placeholder">${p.brand}</div>`
+        }
+      </div>
+      <div class="grid-meta">
+        <span class="b">${p.brand}</span>
+        <span class="t">${p.title}</span>
+      </div>
+    `;
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      const gridThumb = a.querySelector('.grid-thumb');
+      document.querySelectorAll('.thumb, .grid-thumb').forEach(el => { el.style.viewTransitionName = ''; });
+      gridThumb.style.viewTransitionName = 'project-hero';
+      transition.navigateTo(p.key, gridThumb, p.color, p.thumb);
+    });
+    gridList.appendChild(a);
+  });
+
+  /* APPLY FRAME */
+  const FOCUS_RANGE = 1.0;
+  const SCALE_BASE = 0.55;
+  const SCALE_ACTIVE = 1.0;
+
+  function applyFrame() {
+    const { slotPitch } = dims;
+    const wrapped = ((state.pos % projN) + projN) % projN;
+    const focalIdx = centerListIdx + wrapped;
+    const focalCenter = focalIdx * slotPitch + slotPitch / 2;
+    const stripWidth = slots.length * slotPitch;
+    const delta = stripWidth / 2 - focalCenter;
+    strip.style.transform = `translate(calc(-50% + ${delta}px), -50%)`;
+
+    let hotIdx = -1;
+    let hotDist = Infinity;
+    for (let i = 0; i < slots.length; i++) {
+      const d = Math.abs(i - focalIdx);
+      const t = Math.max(0, Math.min(1, 1 - d / FOCUS_RANGE));
+      const s = t * t * (3 - 2 * t);
+      const scale = SCALE_BASE + (SCALE_ACTIVE - SCALE_BASE) * s;
+      thumbs[i].style.setProperty('--scale', scale);
+      if (d < hotDist) { hotDist = d; hotIdx = i; }
+    }
+    for (let i = 0; i < slots.length; i++) {
+      slots[i].classList.toggle('is-hot', i === hotIdx);
+    }
+
+    const projectIdx = ((Math.round(state.pos) % projN) + projN) % projN;
+    const p = projects[projectIdx];
+    if (p.key !== currentBrandKey) swapLabels(p);
+  }
+
+  /* GSAP SCRUB */
+  const state = { pos: 0 };
+  let iteration = 0;
+  const SCROLL_PER_PROJECT = 200;
+  const SCROLL_DISTANCE = projN * SCROLL_PER_PROJECT;
+
+  /* Smoothing: targetPos is written by ScrollTrigger each frame.
+     state.pos chases it via a lerp in rAF. No GSAP tween = no init wobble. */
+  let targetPos = 0;
+  let rafRunning = false;
+
+  function startRaf() {
+    if (rafRunning) return;
+    rafRunning = true;
+    function tick() {
+      const diff = targetPos - state.pos;
+      if (Math.abs(diff) < 0.0005) {
+        state.pos = targetPos;
+        rafRunning = false;
+        applyFrame();
+        return;
+      }
+      state.pos += diff * 0.12;
+      applyFrame();
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  let trigger = null;
+  let userHasScrolled = false;
+
+  function onFirstScroll() {
+    userHasScrolled = true;
+    window.removeEventListener('wheel',     onFirstScroll);
+    window.removeEventListener('touchmove', onFirstScroll);
+    window.removeEventListener('keydown',   onFirstScroll);
+  }
+  window.addEventListener('wheel',     onFirstScroll, { passive: true });
+  window.addEventListener('touchmove', onFirstScroll, { passive: true });
+  window.addEventListener('keydown',   onFirstScroll);
+
+  function buildTrigger() {
+    if (trigger) trigger.kill();
+    trigger = ScrollTrigger.create({
+      trigger: ".gallery",
+      start: "top top",
+      end: `+=${SCROLL_DISTANCE}`,
+      pin: ".gallery",
+      snap: {
+        snapTo: (progress) => {
+          if (!userHasScrolled) return progress;
+          const step = 1 / projN;
+          return Math.round(progress / step) * step;
+        },
+        duration: { min: 0.2, max: 0.5 },
+        delay: 0.05,
+        ease: "power2.inOut"
+      },
+      onUpdate(self) {
+        targetPos = (iteration + self.progress) * projN;
+        startRaf();
+        self.wrapping = false;
+      }
+    });
+  }
+
+  function wrapForward(t) {
+    iteration++;
+    t.wrapping = true;
+    t.scroll(t.start + 1);
+  }
+  function wrapBackward(t) {
+    iteration--;
+    if (iteration < 0) {
+      iteration = 9;
+      state.pos += projN * 10;
+      targetPos = state.pos;
+    }
+    t.wrapping = true;
+    t.scroll(t.end - 1);
+  }
+
+  if (window.innerWidth > 900) buildTrigger();
+
+  /* Wrap detection via wheel events — not onUpdate.
+     onUpdate fires during snap animations too, so using it to detect
+     boundary-crossing caused snap settling at progress=0 to spuriously
+     trigger wrapBackward. wheel events only fire on real user input,
+     never during GSAP's internal snap scrolling.
+     When scroll is clamped at the boundary (can't go further), the
+     scroll position doesn't change so no scroll event fires and onUpdate
+     never runs — the wheel handler is the only way to detect that case. */
+  window.addEventListener('wheel', (e) => {
+    if (!trigger || !userHasScrolled || trigger.wrapping) return;
+    if (trigger.progress <= 1e-5 && e.deltaY < 0) wrapBackward(trigger);
+    else if (trigger.progress >= 1 - 1e-5 && e.deltaY > 0) wrapForward(trigger);
+  }, { passive: true });
+
+  /* ─── LABELS — fixed flash bug ───
+     The flash was caused by my old reset logic: I removed `swapping`, set
+     `transition: none`, wrote new text, then waited a frame to restore
+     transitions. During the "transition: none" frame, the stack/spans
+     snapped to rest position visibly.
+
+     New approach: keep transitions on permanently (via .animating class).
+     To swap, I just shuffle which span has `.current` vs `.next` content
+     and toggle the `.swapping` class. Critically, I use a `flipped` flag
+     to alternate which span is "current" each cycle, so the resting state
+     after a swap doesn't require any reset — it's already correct.
+
+     Cycle:
+       Initial: stack at translateY(0), .current visible, .next hidden.
+       Swap to project Y:
+         - put Y's text into .next
+         - add .swapping class → stack slides up, .current fades, .next fades in
+       After 360ms, the SWAP IS COMPLETE — but the stack is still translated
+       up. So we then:
+         - turn OFF .animating (transitions disabled)
+         - remove .swapping (stack snaps back to translateY(0))
+         - move Y's text into .current, clear .next
+         - force reflow (read offsetHeight)
+         - turn .animating back on
+       Because the snap happens with transitions DISABLED and the offsetHeight
+       read forces a synchronous layout flush, the snap is invisible — the
+       browser commits the new state in one frame, never showing the
+       intermediate.
+  */
+  let currentBrandKey = projects[0].key;
+  let labelTimer = null;
+  function swapLabels(p) {
+    if (p.key === currentBrandKey) return;
+    currentBrandKey = p.key;
+
+    if (labelTimer) clearTimeout(labelTimer);
+
+    // Stage 1: load new text into .next slot, trigger animation
+    brandRow.querySelector('.next').textContent = p.brand;
+    titleRow.querySelector('.next').textContent = p.title;
+    brandRow.classList.add('swapping');
+    titleRow.classList.add('swapping');
+
+    // Stage 2: after animation completes, do the silent reset
+    labelTimer = setTimeout(() => {
+      // freeze: turn off transitions
+      brandRow.classList.remove('animating');
+      titleRow.classList.remove('animating');
+
+      // remove the swapping class — stack snaps to translateY(0) instantly
+      brandRow.classList.remove('swapping');
+      titleRow.classList.remove('swapping');
+
+      // promote .next text → .current; clear .next
+      brandRow.querySelector('.current').textContent = p.brand;
+      brandRow.querySelector('.next').textContent = '';
+      titleRow.querySelector('.current').textContent = p.title;
+      titleRow.querySelector('.next').textContent = '';
+
+      // force the browser to commit all the above in one synchronous layout
+      // — `offsetHeight` is a layout-flushing property
+      void brandRow.offsetHeight;
+      void titleRow.offsetHeight;
+
+      // re-enable transitions for next swap
+      brandRow.classList.add('animating');
+      titleRow.classList.add('animating');
+    }, 380); // a touch longer than the 360ms transition to be safe
+  }
+
+  /* CLICK → transition to project page */
+  strip.addEventListener('click', (e) => {
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    const thumb = slot.querySelector('.thumb');
+    if (!thumb) return;
+    const p = projects[parseInt(slot.dataset.projectIdx)];
+    if (!p) return;
+    document.querySelectorAll('.thumb, .grid-thumb').forEach(el => { el.style.viewTransitionName = ''; });
+    thumb.style.viewTransitionName = 'project-hero';
+    transition.navigateTo(slot.dataset.key, thumb, p?.color, p?.thumb);
+  });
+
+  /* RESTORE CAROUSEL POSITION when returning from a project page */
+  const restoreKey = transition.getRestoreKey();
+  if (restoreKey) {
+    const idx = projects.findIndex(p => p.key === restoreKey);
+    if (idx !== -1) {
+      state.pos = idx;
+      applyFrame();
+      // For VT back-navigation: reveal the carousel instantly (skip the
+      // fade-in animations so the snapshot is fully opaque) and mark the
+      // center thumbnail as the morph target for the hero → thumb morph.
+      document.querySelectorAll('.strip, header, .labels, .corner, .view-toggle')
+        .forEach(el => { el.style.animation = 'none'; el.style.opacity = '1'; });
+      const focalSlot = slots[centerListIdx + idx];
+      if (focalSlot) {
+        focalSlot.querySelector('.thumb').style.viewTransitionName = 'project-hero';
+      }
+    }
+  }
+
+  /* THEME TOGGLE */
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('rc_theme', isDark ? 'dark' : 'light');
+  });
+
+  /* CURSOR */
+  let mx = 0, my = 0;
+  window.addEventListener('mousemove', (e) => {
+    mx = e.clientX; my = e.clientY;
+    cursor.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+    const el = document.elementFromPoint(mx, my);
+    const inStrip = el && el.closest('.strip');
+    const isThumb = el && el.closest('.thumb');
+    if (inStrip && !isThumb) {
+      cursor.classList.add('show');
+    } else {
+      cursor.classList.remove('show');
+    }
+  });
+
+  /* ─── SINGLE TOGGLE BUTTON ─── */
+  const viewToggle = document.getElementById('viewToggle');
+  let isCarousel = true;
+
+  function showCarousel() {
+    isCarousel = true;
+    document.body.classList.remove('in-grid');
+    if (!trigger && window.innerWidth > 900) buildTrigger();
+    viewToggle.textContent = 'Grid';
+    requestAnimationFrame(() => ScrollTrigger.refresh());
+  }
+
+  function showGrid() {
+    isCarousel = false;
+    if (trigger) {
+      trigger.kill();
+      trigger = null;
+    }
+    document.body.classList.add('in-grid');
+    viewToggle.textContent = 'Carousel';
+    window.scrollTo(0, 0);
+  }
+
+  viewToggle.addEventListener('click', () => {
+    if (isCarousel) showGrid();
+    else showCarousel();
+  });
+
+  /* RESIZE */
+  window.addEventListener('resize', () => {
+    dims = getDims();
+    applyFrame();
+    if (window.innerWidth > 900) {
+      if (!trigger && isCarousel) buildTrigger();
+      ScrollTrigger.refresh();
+    } else {
+      if (trigger) { trigger.kill(); trigger = null; }
+    }
+  });
+
+  applyFrame();
+</script>
+
+</body>
+</html>

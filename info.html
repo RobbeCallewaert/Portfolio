@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Info — Robbe Callewaert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #ffffff;
+    --bg-alpha0:  rgba(255,255,255,0);
+    --ink:        #0a0a0a;
+    --ink-soft:   #777777;
+    --ink-faint:  #cfcfcf;
+    --rule:       #ebebeb;
+    --surface:    #f3f3f3;
+  }
+
+  body.dark {
+    --bg:         #0a0a0a;
+    --bg-alpha0:  rgba(10,10,10,0);
+    --ink:        #ffffff;
+    --ink-soft:   #888888;
+    --ink-faint:  #444444;
+    --rule:       #222222;
+    --surface:    #1c1c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scrollbar-width: none;
+    background: var(--bg);
+  }
+  html::-webkit-scrollbar { width: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 100;
+    view-transition-name: site-header;
+  }
+  .logo {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  nav {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+  nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 13px;
+    font-variation-settings: "wght" 500, "wdth" 100;
+    letter-spacing: -0.005em;
+    transition: color 0.3s ease;
+  }
+  nav a:hover { color: var(--ink); }
+  nav a.active { color: var(--ink); }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--ink-soft);
+    line-height: 0;
+    transition: color 200ms ease;
+  }
+  .theme-toggle:hover { color: var(--ink); }
+  .theme-toggle svg { width: 15px; height: 15px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  body.dark .theme-toggle .icon-moon { display: none; }
+  body.dark .theme-toggle .icon-sun  { display: block; }
+
+  /* ─── SPLIT LAYOUT ─── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  /* LEFT — portrait */
+  .col-image {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+  }
+  .portrait-wrap {
+    height: 50vh;
+    width: calc(50vh * 3 / 4);
+    max-width: 100%;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .portrait-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 20%;
+    display: block;
+    filter: grayscale(1) contrast(1.05);
+    opacity: 0;
+    transition: opacity 1.2s ease;
+  }
+  .portrait-wrap img.loaded { opacity: 1; }
+
+  /* RIGHT — content */
+  .col-content {
+    padding: 120px 64px 80px 56px;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid var(--rule);
+    min-height: 100vh;
+  }
+
+  /* ─── DISCIPLINES ─── */
+  .disciplines {
+    display: flex;
+    gap: 48px;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--rule);
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .disciplines span {
+    font-variation-settings: "wght" 500, "wdth" 100;
+    font-size: 13px;
+    color: var(--ink-soft);
+    letter-spacing: 0.01em;
+  }
+
+  /* ─── EMAIL HEADING ─── */
+  .bio-email {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(20px, 2.4vw, 34px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: var(--ink);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 28px;
+    transition: color 0.3s ease;
+  }
+  .bio-email:hover { color: var(--ink-soft); }
+
+  /* ─── BIO ─── */
+  .bio {
+    margin-bottom: 64px;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .bio p {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+    max-width: 520px;
+  }
+  .bio p strong {
+    font-variation-settings: "wght" 600, "wdth" 100;
+    color: var(--ink);
+  }
+  .bio p a {
+    color: var(--ink);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 1px;
+  }
+  .bio p a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width 0.3s cubic-bezier(.65,0,.2,1);
+  }
+  .bio p a:hover::after { width: 100%; }
+
+  /* ─── CLIENTS / STUDIOS TABLE ─── */
+  .lists {
+    flex: 1;
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  .lists-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .lists-header span {
+    font-variation-settings: "wght" 600, "wdth" 100;
+    font-size: 12px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .lists-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+  .list-col:not(:first-child) { padding-left: 24px; }
+  .list-col:not(:last-child)  { padding-right: 24px; border-right: 1px solid var(--rule); }
+  .list-item {
+    padding: 11px 0;
+    border-bottom: 1px solid var(--rule);
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 14px;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  .list-item a {
+    color: var(--ink);
+    text-decoration: none;
+    position: relative;
+    padding-bottom: 1px;
+  }
+  .list-item a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width 0.3s cubic-bezier(.65,0,.2,1);
+  }
+  .list-item a:hover::after { width: 100%; }
+
+  /* ─── CONTACT FOOTER ─── */
+  .contact {
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  .contact a {
+    color: var(--ink);
+    text-decoration: none;
+    font-variation-settings: "wght" 500, "wdth" 100;
+    font-size: 13px;
+    letter-spacing: -0.005em;
+    position: relative;
+    padding-bottom: 2px;
+  }
+  .contact a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: 0;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width 0.4s cubic-bezier(.65,0,.2,1);
+  }
+  .contact a:hover::after { width: 100%; }
+  .contact .location {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 12px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+
+  /* ─── ANIMATIONS ─── */
+  .anim { transition: opacity 700ms ease, transform 700ms cubic-bezier(.65,0,.2,1); }
+  .anim.in { opacity: 1 !important; transform: none !important; }
+  .list-item { transition: opacity 500ms ease, transform 500ms cubic-bezier(.65,0,.2,1); }
+  .list-item.in { opacity: 1 !important; transform: none !important; }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 900px) {
+    header { padding: 20px 24px; }
+    .layout { grid-template-columns: 1fr; }
+    .col-image {
+      position: relative;
+      height: auto;
+      padding: 80px 24px 32px;
+    }
+    .portrait-wrap {
+      height: 45vw;
+      min-height: 200px;
+      width: auto;
+      aspect-ratio: 3 / 4;
+    }
+    .col-content {
+      border-left: none;
+      border-top: 1px solid var(--rule);
+      padding: 48px 24px 64px;
+    }
+    .disciplines { gap: 28px; flex-wrap: wrap; }
+    .bio p { font-size: 15px; }
+  }
+
+  /* ─── VIEW TRANSITIONS ─── */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+  ::view-transition-group(site-header)  { animation-duration: 250ms; animation-timing-function: ease; }
+</style>
+</head>
+<body>
+<script>if (localStorage.getItem('rc_theme') === 'dark') document.body.classList.add('dark');</script>
+
+<header>
+  <a class="logo" href="index.html">
+    Robbe Callewaert
+  </a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+  </button>
+  <nav>
+    <a href="index.html">work</a>
+    <a href="info.html" class="active">info</a>
+  </nav>
+</header>
+
+<main class="layout">
+
+  <!-- LEFT: portrait -->
+  <div class="col-image">
+    <div class="portrait-wrap">
+      <img id="portrait" src="assets/images/thumbnails/portrait.webp" alt="Robbe Callewaert">
+    </div>
+  </div>
+
+  <!-- RIGHT: content -->
+  <div class="col-content">
+
+    <div class="disciplines anim" id="a1">
+      <span>3D</span>
+      <span>Motion</span>
+      <span>Art Direction</span>
+    </div>
+
+    <div class="bio anim" id="a2">
+      <a class="bio-email" href="mailto:hello@robbecallewaert.com">hello@robbecallewaert.com</a>
+      <p>Robbe is a <strong>3D and motion design artist</strong> with over eight years of experience creating concept-driven work for beauty, fashion, and tech clients. His practice is rooted in 3D and animation, built on a foundation in illustration, graphic design, and 2D motion.</p>
+      <br>
+      <p>After several years at UK studio <strong><a href="https://www.instagram.com/ilovedust/" target="_blank" rel="noopener noreferrer">ILOVEDUST</a></strong> — contributing to campaigns for Apple, Nike, Spotify, and Google — he went freelance in 2022 and now works from <strong>Prague</strong> with studios like <a href="https://www.zunc.studio/" target="_blank" rel="noopener noreferrer">ZUNC</a>, <a href="https://www.instagram.com/sucukundbratwurst/" target="_blank" rel="noopener noreferrer">Sucuk&nbsp;&amp;&nbsp;Bratwurst</a>, and <a href="https://softpower.global/" target="_blank" rel="noopener noreferrer">Softpower</a>.</p>
+      <br>
+      <p>Below are some of the brands and studios I've been lucky enough to work with.</p>
+    </div>
+
+    <div class="lists anim" id="a3">
+      <div class="lists-header">
+        <span>Clients</span>
+        <span>Studios</span>
+        <span>Services</span>
+        <span>Software</span>
+      </div>
+      <div class="lists-body">
+        <div class="list-col" id="clientList"></div>
+        <div class="list-col" id="studioList"></div>
+        <div class="list-col" id="serviceList"></div>
+        <div class="list-col" id="softwareList"></div>
+      </div>
+    </div>
+
+    <div class="contact anim" id="a4">
+      <a href="mailto:hello@robbecallewaert.com">hello@robbecallewaert.com</a>
+      <a href="https://instagram.com/robbecallewaert" target="_blank">Instagram ↗</a>
+      <span class="location">Prague, CZ</span>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  /* ─── THEME ─── */
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('rc_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  });
+
+  /* ─── LISTS ─── */
+  const clients = [
+    'Apple', 'Nike', 'Jacquemus', 'Lego', 'Breitling',
+    'The North Face', 'Puma', 'Crocs', 'Skinceuticals',
+    'La Roche-Posay', 'Riot Games', 'Bad Bunny'
+  ];
+  const studios = [
+    { name: 'Zunc',              url: 'https://www.zunc.studio/' },
+    { name: 'Sucuk & Bratwurst', url: 'https://www.instagram.com/sucukundbratwurst/' },
+    { name: 'Softpower',         url: 'https://softpower.global/' },
+    { name: 'Ilovedust',         url: 'https://www.instagram.com/ilovedust/' },
+    { name: 'Seventeen',         url: 'https://www.seventeenagency.com' },
+    { name: 'Sturdy',            url: 'https://sturdy.co/' },
+  ];
+  const services = [
+    'Creative Direction', '3D Motion Design', '2D Motion Design', 'FOOH', '3D Asset Creation'
+  ];
+  const software = [
+    'Cinema 4D', 'Redshift', 'Octane', 'After Effects', 'GAEA', 'Substance Painter'
+  ];
+
+  const clientList   = document.getElementById('clientList');
+  const studioList   = document.getElementById('studioList');
+  const serviceList  = document.getElementById('serviceList');
+  const softwareList = document.getElementById('softwareList');
+
+  const buildItems = (list, el) => list.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    div.textContent = t;
+    el.appendChild(div);
+  });
+  const buildStudioItems = (list, el) => list.forEach(({ name, url }) => {
+    const div = document.createElement('div');
+    div.className = 'list-item';
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = name;
+    div.appendChild(a);
+    el.appendChild(div);
+  });
+  buildItems(clients,       clientList);
+  buildStudioItems(studios, studioList);
+  buildItems(services,      serviceList);
+  buildItems(software,      softwareList);
+
+  /* ─── PORTRAIT FADE ─── */
+  const portrait = document.getElementById('portrait');
+  portrait.addEventListener('load', () => portrait.classList.add('loaded'));
+  if (portrait.complete) portrait.classList.add('loaded');
+
+  /* ─── STAGGERED REVEAL ─── */
+  const anims = [
+    { el: document.getElementById('a1'), delay: 80 },
+    { el: document.getElementById('a2'), delay: 180 },
+    { el: document.getElementById('a3'), delay: 280 },
+    { el: document.getElementById('a4'), delay: 380 },
+  ];
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const idx = anims.findIndex(a => a.el === entry.target);
+      setTimeout(() => entry.target.classList.add('in'), idx >= 0 ? anims[idx].delay : 0);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.05 });
+
+  anims.forEach(({ el }) => observer.observe(el));
+
+  const listItems = document.querySelectorAll('.list-item');
+  setTimeout(() => {
+    listItems.forEach((item, i) => setTimeout(() => item.classList.add('in'), 320 + i * 28));
+  }, 300);
+</script>
+
+</body>
+</html>

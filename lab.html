@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Lab — Robbe Callewaert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #ffffff;
+    --bg-alpha0:  rgba(255,255,255,0);
+    --ink:        #0a0a0a;
+    --ink-soft:   #777777;
+    --ink-faint:  #cfcfcf;
+    --rule:       #ebebeb;
+    --surface:    #f3f3f3;
+  }
+
+  body.dark {
+    --bg:         #0a0a0a;
+    --bg-alpha0:  rgba(10,10,10,0);
+    --ink:        #ffffff;
+    --ink-soft:   #888888;
+    --ink-faint:  #444444;
+    --rule:       #222222;
+    --surface:    #1c1c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scrollbar-width: none; background: var(--bg); }
+  html::-webkit-scrollbar { width: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ─── TOP GRADIENT ─── */
+  .top-gradient {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 140px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 99;
+    pointer-events: none;
+    view-transition-name: top-gradient;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 28px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 100;
+    view-transition-name: site-header;
+  }
+  .logo {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  nav { display: flex; gap: 32px; align-items: center; }
+  nav a {
+    color: var(--ink-soft);
+    text-decoration: none;
+    font-size: 13px;
+    font-variation-settings: "wght" 500, "wdth" 100;
+    letter-spacing: -0.005em;
+    transition: color 0.3s ease;
+  }
+  nav a:hover { color: var(--ink); }
+  nav a.active { color: var(--ink); }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--ink-soft);
+    line-height: 0;
+    transition: color 200ms ease;
+  }
+  .theme-toggle:hover { color: var(--ink); }
+  .theme-toggle svg { width: 15px; height: 15px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  body.dark .theme-toggle .icon-moon { display: none; }
+  body.dark .theme-toggle .icon-sun  { display: block; }
+
+  /* ─── LAB TITLE ─── */
+  .lab-title {
+    text-align: center;
+    padding: 120px 40px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .lab-title p {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(28px, 4vw, 58px);
+    line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+  }
+
+  /* ─── LAB LAYOUT ─── */
+  .lab {
+    padding: 40px 0 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+    align-items: center;
+  }
+
+  .lab-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 600ms ease, transform 600ms cubic-bezier(.65,0,.2,1);
+  }
+  .lab-row.visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .lab-item {
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 3px;
+  }
+  .lab-item img,
+  .lab-item video {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 700px) {
+    .lab { gap: 16px; }
+    .lab-row { gap: 10px; flex-wrap: wrap; justify-content: center; }
+  }
+
+  /* ─── VIEW TRANSITIONS ─── */
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 250ms; animation-timing-function: ease; }
+  ::view-transition-group(site-header)  { animation-duration: 250ms; animation-timing-function: ease; }
+  ::view-transition-group(top-gradient) { animation-duration: 250ms; animation-timing-function: ease; }
+</style>
+</head>
+<body>
+<script>if (localStorage.getItem('rc_theme') === 'dark') document.body.classList.add('dark');</script>
+
+<div class="top-gradient"></div>
+
+<header>
+  <a class="logo" href="index.html">
+    Robbe Callewaert
+  </a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+  </button>
+  <nav>
+    <a href="index.html">work</a>
+    <a href="info.html">info</a>
+  </nav>
+</header>
+
+<div class="lab-title">
+  <p>A collection of experiments and unused exploration for commercial and personal projects.</p>
+</div>
+
+<div class="lab" id="lab"></div>
+
+<script>
+  /* ═══════════════════════════════════════════════════
+     MEDIA — add / remove items here.
+     Each entry: { type: 'image' | 'video', src: '...' }
+     Adding to the front cascades everything down.
+  ═══════════════════════════════════════════════════ */
+  const MEDIA = [
+    { type: 'video', src: 'assets/images/altamesa/TNF_ALTAMESA_MOUNTAIN_DEFORMATION_RND_04.mp4' },
+    { type: 'image', src: 'assets/images/mambacita/soft_power-nike-mambacita_still_01.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/01_DIVE.mp4' },
+    { type: 'image', src: 'assets/images/altamesa/soft_power-the_north_face-altamesa_still_01.webp' },
+    { type: 'image', src: 'assets/images/Watermelon/Watermelon_Bug_Wide.webp' },
+    { type: 'video', src: 'assets/images/mambacita/soft_power-nike-mambacita_clip_01.mp4' },
+    { type: 'video', src: 'assets/images/mambacita/soft_power-nike-mambacita_clip_02.mp4' },
+    { type: 'video', src: 'assets/images/awcny23/Bunny.mp4' },
+    { type: 'image', src: 'assets/images/banana/personal-strange_fruit-banana_still_01.webp' },
+    { type: 'video', src: 'assets/images/awcny23/Envelope.mp4' },
+    { type: 'image', src: 'assets/images/altamesa/soft_power-the_north_face-altamesa_still_02.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/02_TAIL.mp4' },
+    { type: 'image', src: 'assets/images/Watermelon/Watermelon_Slice_06_wide0056.webp' },
+    { type: 'image', src: 'assets/images/breitling_b19/Breitling_B19.webp' },
+    { type: 'video', src: 'assets/images/banana/personal-strange_fruit-banana_wip_clip_01.mp4' },
+    { type: 'image', src: 'assets/images/altamesa/soft_power-the_north_face-altamesa_still_03.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/03_SALTO_1.mp4' },
+    { type: 'image', src: 'assets/images/legopharrell/pharrell-williams-over-the-moon-lego-set-hero.webp' },
+    { type: 'video', src: 'assets/images/Watermelon/Walkcycle%20Test_1.mp4' },
+    { type: 'image', src: 'assets/images/altamesa/soft_power-the_north_face-altamesa_still_04.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/04_B_1.mp4' },
+    { type: 'image', src: 'assets/images/mambacita/soft_power-nike-mambacita_still_02.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/05_TRANSFORMATION_1.mp4' },
+    { type: 'image', src: 'assets/images/banana/personal-strange_fruit-banana_still_02.webp' },
+    { type: 'vimeo', id: '1193994157', ratio: '16/9' },
+    { type: 'image', src: 'assets/images/legopharrell/10391_Feature1.webp' },
+    { type: 'video', src: 'assets/images/breitling_b19/06_CLOUD%20BURST_1.mp4' },
+    { type: 'image', src: 'assets/images/awspring23/awspring_storyboard_legacy.webp' },
+    { type: 'image', src: 'assets/images/altamesa/soft_power-the_north_face-altamesa_wip_01.webp' },
+    { type: 'image', src: 'assets/images/awspring23/awspring_storyboard_vortex.webp' },
+    { type: 'image', src: 'assets/images/awspring23/awspring_storyboard_ryan.webp' },
+  ];
+
+  /* ═══════════════════════════════════════════════════
+     ROW_SIZES — how many items per row, in order.
+     Repeats from the start when items exceed the list.
+  ═══════════════════════════════════════════════════ */
+  const ROW_SIZES = [3, 2, 4, 3, 2, 5, 3, 4, 2, 3];
+
+  /* ─── Layout constants ─── */
+  const ITEM_GAP   = 16;   // px between items within a row
+  const TARGET_H   = 0.50; // target row height as fraction of vh
+  const MAX_W_FRAC = 0.88; // max row width as fraction of vw
+
+  /* ─── Build DOM from MEDIA array ─── */
+  function buildDOM() {
+    const lab = document.getElementById('lab');
+    lab.innerHTML = '';
+    let i = 0;
+    let rowIdx = 0;
+    while (i < MEDIA.length) {
+      const size     = ROW_SIZES[rowIdx % ROW_SIZES.length];
+      const slice    = MEDIA.slice(i, i + size);
+      const row      = document.createElement('div');
+      row.className  = 'lab-row';
+      slice.forEach(item => {
+        const cell    = document.createElement('div');
+        cell.className = 'lab-item';
+        if (item.type === 'video') {
+          const v      = document.createElement('video');
+          v.src        = item.src;
+          v.muted      = true;
+          v.loop       = true;
+          v.setAttribute('playsinline', '');
+          cell.appendChild(v);
+        } else {
+          const img    = document.createElement('img');
+          img.src      = item.src;
+          img.alt      = '';
+          img.loading  = 'lazy';
+          cell.appendChild(img);
+        }
+        row.appendChild(cell);
+      });
+      lab.appendChild(row);
+      i      += slice.length;
+      rowIdx += 1;
+    }
+  }
+
+  /* ─── Justified layout ─── */
+  function getRatio(cell) {
+    const img   = cell.querySelector('img');
+    const video = cell.querySelector('video');
+    if (img   && img.naturalWidth)  return img.naturalWidth  / img.naturalHeight;
+    if (video && video.videoWidth)  return video.videoWidth  / video.videoHeight;
+    return 16 / 9;
+  }
+
+  function layoutRow(row) {
+    const cells     = [...row.querySelectorAll('.lab-item')];
+    const ratios    = cells.map(getRatio);
+    const sumRatios = ratios.reduce((a, b) => a + b, 0);
+    const maxW      = window.innerWidth * MAX_W_FRAC;
+    const gaps      = ITEM_GAP * (cells.length - 1);
+    const h = Math.min(
+      window.innerHeight * TARGET_H,
+      (maxW - gaps) / sumRatios
+    );
+    cells.forEach((cell, idx) => {
+      cell.style.width  = (ratios[idx] * h) + 'px';
+      cell.style.height = h + 'px';
+    });
+  }
+
+  function layoutAll() {
+    document.querySelectorAll('.lab-row').forEach(layoutRow);
+  }
+
+  /* ─── Init ─── */
+  buildDOM();
+  layoutAll();
+
+  // Refine layout as true dimensions become available
+  document.querySelectorAll('.lab-item img').forEach(img => {
+    if (img.complete && img.naturalWidth) layoutAll();
+    else img.addEventListener('load', layoutAll);
+  });
+  document.querySelectorAll('.lab-item video').forEach(v => {
+    v.addEventListener('loadedmetadata', layoutAll);
+  });
+
+  window.addEventListener('resize', layoutAll);
+
+  /* ─── Reveal rows + play/pause on scroll ─── */
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      entry.target.classList.toggle('visible', entry.isIntersecting);
+      entry.target.querySelectorAll('video').forEach(v => {
+        if (entry.isIntersecting) v.play().catch(() => {});
+        else v.pause();
+      });
+    });
+  }, { threshold: 0.1 });
+
+  // Observe rows after they're built; re-observe on resize isn't needed
+  // since rows are the same elements — the observer persists
+  document.querySelectorAll('.lab-row').forEach(row => io.observe(row));
+
+  /* ─── Theme ─── */
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('rc_theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  });
+</script>
+
+</body>
+</html>

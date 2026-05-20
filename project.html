@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Robbe Callewaert</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:         #ffffff;
+    --bg-alpha0:  rgba(255,255,255,0);
+    --ink:        #0a0a0a;
+    --ink-soft:   #777777;
+    --ink-faint:  #cfcfcf;
+    --rule:       #ebebeb;
+    --surface:    #f3f3f3;
+    --max-w:      1320px;
+    --pad:        clamp(24px, 5vw, 80px);
+  }
+
+  body.dark {
+    --bg:         #0a0a0a;
+    --bg-alpha0:  rgba(10,10,10,0);
+    --ink:        #ffffff;
+    --ink-soft:   #888888;
+    --ink-faint:  #666666;
+    --rule:       #222222;
+    --surface:    #1c1c1c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html {
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+  }
+  html::-webkit-scrollbar { width: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Archivo', system-ui, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* ─── EDGE GRADIENTS ─── */
+  body::after {
+    content: '';
+    position: fixed;
+    left: 0; right: 0;
+    pointer-events: none;
+    bottom: 0;
+    height: 100px;
+    background: linear-gradient(to top, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 25;
+  }
+  .top-gradient {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 140px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 99; /* just below header (100) */
+    pointer-events: none;
+    view-transition-name: top-gradient;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 28px 36px;
+    view-transition-name: site-header;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    z-index: 100;
+    mix-blend-mode: normal;
+  }
+  .logo {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: 32px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+    color: var(--ink);
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-variation-settings: "wght" 500, "wdth" 100;
+    color: var(--ink-soft);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.3s ease;
+    text-decoration: none;
+  }
+  .back-btn:hover { color: var(--ink); }
+  .back-btn svg {
+    width: 14px; height: 14px;
+    transition: transform 0.3s cubic-bezier(.65,0,.2,1);
+  }
+  .back-btn:hover svg { transform: translateX(-4px); }
+
+  /* ─── THEME TOGGLE ─── */
+  .theme-toggle {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: var(--ink-soft);
+    pointer-events: auto;
+    line-height: 0;
+    transition: color 200ms ease;
+  }
+  .theme-toggle:hover { color: var(--ink); }
+  .theme-toggle svg { width: 15px; height: 15px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  body.dark .theme-toggle .icon-moon { display: none; }
+  body.dark .theme-toggle .icon-sun  { display: block; }
+
+  /* ─── PAGE WRAPPER ─── */
+  .page {
+    padding-top: 0; /* hero goes full-width at top, header floats over it */
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    width: 100%;
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 100px var(--pad) 0;
+    /* will-change kept here for transform transition */
+    will-change: transform;
+  }
+  .hero-media {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--project-color, #f3f3f3);
+    border-radius: 6px;
+    view-transition-name: project-hero;
+  }
+  /* aspect ratio box */
+  .hero-media::before {
+    content: "";
+    display: block;
+    padding-top: var(--ratio-pad, 56.25%); /* default 16/9 */
+  }
+  .hero-media iframe,
+  .hero-media img,
+  .hero-media video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+    z-index: 1;
+  }
+
+  /* ─── PROJECT META ─── */
+  .meta {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 56px var(--pad) 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 40px;
+    align-items: end;
+  }
+  .meta-title {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(36px, 5vw, 72px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+  .meta-client {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: clamp(18px, 2vw, 24px);
+    color: var(--ink-soft);
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+  }
+  .meta-info {
+    text-align: right;
+    flex-shrink: 0;
+    align-self: start;
+  }
+  .meta-info .studio {
+    display: block;
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: clamp(18px, 2vw, 24px);
+    color: var(--ink-soft);
+    letter-spacing: -0.01em;
+    margin-bottom: 16px;
+  }
+  .meta-info .year {
+    font-variation-settings: "wght" 500, "wdth" 100;
+    font-size: 14px;
+    color: var(--ink-soft);
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .meta-info .role {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 14px;
+    color: var(--ink-faint);
+    letter-spacing: 0.02em;
+  }
+  .meta-info .studio a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  .meta-info .studio a:hover {
+    color: var(--ink-soft);
+    border-color: var(--ink-faint);
+  }
+  .divider {
+    max-width: var(--max-w);
+    margin: 48px auto 0;
+    padding: 0 var(--pad);
+  }
+  .divider hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ─── DESCRIPTION ─── */
+  .description {
+    max-width: var(--max-w);
+    margin: 0 auto;
+    padding: 48px var(--pad);
+  }
+  .description p {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink);
+    white-space: pre-line;
+  }
+
+  /* ─── SECTIONS ─── */
+  .sections {
+    padding-bottom: 120px;
+  }
+
+  /* ─── TEXT SECTION ─── */
+  .section-text {
+    max-width: var(--max-w);
+    margin: 64px auto;
+    padding: 0 var(--pad);
+  }
+  .section-text p {
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink-soft);
+  }
+  .section-text .section-title {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(20px, 1.8vw, 26px);
+    letter-spacing: -0.02em;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  /* ─── FEATURE SECTION (single full-width media) ─── */
+  .section-feature {
+    max-width: var(--max-w);
+    margin: 64px auto;
+    padding: 0 var(--pad);
+  }
+  .section-title {
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(18px, 2.5vw, 36px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  .section-caption {
+    margin-top: 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-soft);
+  }
+  .feature-media {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background: var(--surface);
+    border-radius: 4px;
+  }
+  .feature-media::before {
+    content: "";
+    display: block;
+    padding-top: var(--ratio-pad, 56.25%);
+  }
+  .feature-media iframe,
+  .feature-media img,
+  .feature-media video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border: none;
+  }
+  /* Natural-size images: no forced aspect ratio */
+  .feature-media--natural::before { content: none; }
+  .feature-media--natural img {
+    position: static;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  .feature-media--zoomable { cursor: zoom-in; }
+
+  /* ─── GRID SECTION ─── */
+  .section-grid {
+    max-width: var(--max-w);
+    margin: 64px auto;
+    padding: 0 var(--pad);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  /* row divs are flattened so items lay out in the CSS grid */
+  .grid-row { display: contents; }
+
+  .grid-item {
+    overflow: hidden;
+    background: var(--surface);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .grid-item img,
+  .grid-item video {
+    width: 100%;
+    height: auto;
+    display: block;
+    transition: transform 600ms cubic-bezier(.65,0,.2,1);
+  }
+  .grid-item:hover img,
+  .grid-item:hover video {
+    transform: scale(1.03);
+  }
+
+  /* ─── PLACEHOLDER (shown when no real media is provided) ─── */
+  .media-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(0,0,0,0.2);
+    font-variation-settings: "wght" 500, "wdth" 100;
+    font-size: 13px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── LIGHTBOX ─── */
+  .lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 250ms ease;
+    cursor: zoom-out;
+    padding: 40px;
+  }
+  .lightbox.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+    cursor: default;
+    transform: scale(0.95);
+    transition: transform 300ms cubic-bezier(.65,0,.2,1);
+    user-select: none;
+  }
+  .lightbox.open .lightbox-img {
+    transform: scale(1);
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 32px var(--pad);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  footer a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s ease, color 0.3s ease;
+  }
+  footer a:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+  .next-project {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-variation-settings: "wght" 500, "wdth" 100;
+    font-size: 13px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: gap 0.3s cubic-bezier(.65,0,.2,1);
+  }
+  .next-project:hover { gap: 16px; }
+  .next-project svg { width: 14px; height: 14px; }
+
+  /* ─── PAGE ENTER ANIMATIONS ─── */
+  /* Elements that fade/slide in after the hero transition completes */
+  .anim-in {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  .anim-in.visible {
+    transition: opacity 600ms cubic-bezier(.65,0,.2,1),
+                transform 700ms cubic-bezier(.65,0,.2,1);
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ─── MOBILE ─── */
+  @media (max-width: 768px) {
+    .meta { grid-template-columns: 1fr; gap: 20px; }
+    .meta-info { text-align: left; }
+    .section-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ─── VIEW TRANSITIONS ─── */
+  @view-transition { navigation: auto; }
+
+  ::view-transition-group(project-hero) {
+    animation-duration: 750ms;
+    animation-timing-function: cubic-bezier(.65, 0, .2, 1);
+  }
+  @keyframes vt-fade-out { from { opacity: 1; } to { opacity: 0; } }
+  /* Old page fades out while hero morphs; new page content stays hidden until after VT */
+  ::view-transition-old(root) { animation: vt-fade-out 600ms ease-out both; }
+  ::view-transition-new(root) { animation: none; opacity: 0; }
+  /* Header persists across the transition */
+  ::view-transition-group(site-header) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+  /* Top gradient persists across the transition */
+  ::view-transition-group(top-gradient) {
+    animation-duration: 250ms;
+    animation-timing-function: ease;
+  }
+</style>
+
+<script>
+  let __vt = null;
+  let __vtFired = false;
+  let __onPageReveal = null;
+
+  window.addEventListener('pagereveal', (e) => {
+    __vt = e.viewTransition || null;
+    __vtFired = true;
+    if (__onPageReveal) __onPageReveal();
+  });
+
+  // Apply project color early so the placeholder shows it before init() runs
+  try {
+    const __d = JSON.parse(sessionStorage.getItem('rc_transition') || 'null');
+    if (__d?.color) document.documentElement.style.setProperty('--project-color', __d.color);
+  } catch (e) {}
+</script>
+</head>
+<body>
+<script>if (localStorage.getItem('rc_theme') === 'dark') document.body.classList.add('dark');</script>
+
+<div class="top-gradient"></div>
+
+<header>
+  <a class="logo" href="index.html">
+    Robbe Callewaert
+  </a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+  </button>
+  <button class="back-btn" id="backBtn" onclick="transition.back()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M19 12H5M11 6l-6 6 6 6"/>
+    </svg>
+    Work
+  </button>
+</header>
+
+<div class="page" id="page">
+  <section class="hero" id="hero">
+    <div class="hero-media" id="heroMediaPlaceholder"></div>
+    <script>
+      // Runs before pagereveal so VT snapshot captures the thumbnail, not the blank colour.
+      try {
+        var __d = JSON.parse(sessionStorage.getItem('rc_transition') || 'null');
+        if (__d && __d.thumbSrc) {
+          var __el = document.getElementById('heroMediaPlaceholder');
+          __el.style.backgroundImage    = "url('" + __d.thumbSrc + "')";
+          __el.style.backgroundSize     = 'cover';
+          __el.style.backgroundPosition = 'center';
+        }
+      } catch(e) {}
+    </script>
+  </section>
+</div>
+
+<footer class="anim-in">
+  <a href="https://instagram.com" target="_blank">Instagram ↗</a>
+  <a class="next-project" id="nextProjectLink" href="#">
+    Next project
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+      <path d="M5 12h14M13 6l6 6-6 6"/>
+    </svg>
+  </a>
+  <span>©2026 Robbe Callewaert</span>
+</footer>
+
+<!-- Load transition utility -->
+<script src="transition.js"></script>
+<script src="projects.js"></script>
+
+<div id="lightbox" class="lightbox">
+  <img id="lightboxImg" class="lightbox-img" src="" alt="">
+</div>
+
+<!-- Load the right project config based on ?key= URL param -->
+<script>
+  /* ─── RESOLVE PROJECT KEY FROM URL ─── */
+  const params  = new URLSearchParams(window.location.search);
+  const key     = params.get('key') || 'altamesa';
+
+  // Dynamically load the project's JS config file
+  const configScript = document.createElement('script');
+  configScript.src = `projects/${key}.js`;
+  configScript.onload  = init;
+  configScript.onerror = () => {
+    document.getElementById('page').innerHTML =
+      '<p style="padding:120px 40px;color:#999">Project not found.</p>';
+  };
+  document.head.appendChild(configScript);
+
+  /* ─── ALL PROJECTS LIST (derived from shared projects.js) ─── */
+  const ALL_PROJECTS = PROJECTS.map(p => p.key);
+
+  /* ─── HELPERS ─── */
+  function ratioPad(ratioStr) {
+    // '16/9' → '56.25%'   '9/16' → '177.78%'   '1/1' → '100%'
+    const [w, h] = (ratioStr || '16/9').split('/').map(Number);
+    return ((h / w) * 100).toFixed(4) + '%';
+  }
+
+  function buildMediaEl(item, isHero) {
+    const el = document.createElement('div');
+    el.className = isHero ? 'hero-media' : (item._feature ? 'feature-media' : 'grid-item');
+    el.style.setProperty('--ratio-pad', ratioPad(item.ratio || '16/9'));
+
+    if (!isHero && !item._feature) {
+      // For grid items, set flex-basis proportional to the aspect ratio
+      const [w, h] = (item.ratio || '16/9').split('/').map(Number);
+      el.style.flexBasis = (w / h * 100) + '%';
+    }
+
+    if (isHero && item._thumb) {
+      const blur = document.createElement('div');
+      blur.className = 'hero-blur';
+      blur.style.backgroundImage = `url(${item._thumb})`;
+      el.appendChild(blur);
+    }
+
+    if (item.type === 'vimeo') {
+      const iframe = document.createElement('iframe');
+      // autoplay=1, muted=1, background=1 (hides controls), loop=1
+      iframe.src = `https://player.vimeo.com/video/${item.id}?autoplay=1&muted=1&loop=1&title=0&byline=0&portrait=0&quality=1080p`;
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+      iframe.setAttribute('allowfullscreen', '');
+      el.appendChild(iframe);
+
+    } else if (item.type === 'video') {
+      const video = document.createElement('video');
+      video.src = item.src;
+      video.autoplay = true;
+      video.muted    = true;
+      video.loop     = true;
+      video.setAttribute('playsinline', '');
+      el.appendChild(video);
+
+    } else if (item.type === 'image') {
+      const img = document.createElement('img');
+      img.src = item.src;
+      img.alt = item.alt || '';
+      img.loading = 'lazy';
+      el.appendChild(img);
+
+    } else {
+      // Placeholder for missing media
+      const ph = document.createElement('div');
+      ph.className = 'media-placeholder';
+      ph.textContent = item.type || 'Media';
+      el.appendChild(ph);
+    }
+
+    return el;
+  }
+
+  /* ─── ROW LAYOUT ───
+     Pack items into fixed-height rows. Each row can hold multiple items.
+     We pack greedily: keep adding items until the total aspect ratio
+     of the row exceeds a threshold (i.e. the row looks full enough).
+     This is a simplified version of the Knuth-Plass justified layout.
+  */
+  function packIntoRows(items, targetRatioPerRow) {
+    const rows = [];
+    let currentRow = [];
+    let currentRatio = 0;
+
+    items.forEach(item => {
+      const [w, h] = (item.ratio || '16/9').split('/').map(Number);
+      const itemRatio = w / h;
+      currentRow.push(item);
+      currentRatio += itemRatio;
+
+      if (currentRatio >= targetRatioPerRow) {
+        rows.push(currentRow);
+        currentRow = [];
+        currentRatio = 0;
+      }
+    });
+
+    if (currentRow.length > 0) rows.push(currentRow);
+    return rows;
+  }
+
+  /* ─── MAIN INIT — runs after project config is loaded ─── */
+  function init() {
+    const p = window.PROJECT;
+    if (!p) return;
+
+    // Set page title
+    document.title = `${p.client} — ${p.title} | Robbe Callewaert`;
+
+    // Set the project color as a CSS var for the hero bg
+    document.documentElement.style.setProperty('--project-color', p.color || '#f3f3f3');
+
+    const page = document.getElementById('page');
+
+    // ── HERO — populate the static placeholder captured in the VT snapshot ──
+    const heroMedia = document.getElementById('heroMediaPlaceholder');
+    heroMedia.style.setProperty('--ratio-pad', ratioPad(p.hero?.ratio || '16/9'));
+
+    // Show the thumbnail (already cached from the carousel) as an instant bg
+    // while the full-res hero image loads on top.
+    if (p.thumb) {
+      heroMedia.style.backgroundImage    = `url('${p.thumb}')`;
+      heroMedia.style.backgroundSize     = 'cover';
+      heroMedia.style.backgroundPosition = 'center';
+    }
+
+    const heroItem = p.hero || {};
+    if (heroItem.type === 'vimeo') {
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://player.vimeo.com/video/${heroItem.id}?autoplay=1&muted=1&loop=1&background=1&quality=1080p`;
+      iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+      iframe.setAttribute('allowfullscreen', '');
+      heroMedia.appendChild(iframe);
+    } else if (heroItem.type === 'video') {
+      const video = document.createElement('video');
+      video.src = heroItem.src;
+      video.autoplay = true;
+      video.muted    = true;
+      video.loop     = true;
+      video.setAttribute('playsinline', '');
+      heroMedia.appendChild(video);
+    } else if (heroItem.type === 'image') {
+      const img = document.createElement('img');
+      img.src = heroItem.src;
+      img.alt = heroItem.alt || '';
+      heroMedia.appendChild(img);
+    }
+
+    // ── META ──
+    const meta = document.createElement('div');
+    meta.className = 'meta anim-in';
+    meta.innerHTML = `
+      <div>
+        <div class="meta-client">${p.client}</div>
+        <h1 class="meta-title">${p.title}</h1>
+      </div>
+      <div class="meta-info">
+        ${p.studio ? `<span class="studio">Studio: ${
+          p.studio.url
+            ? `<a href="${p.studio.url}" target="_blank" rel="noopener">${p.studio.name}</a>`
+            : p.studio.name
+        }</span>` : ''}
+        <span class="year">${p.year || ''}</span>
+        <span class="role">${p.role || ''}</span>
+      </div>
+    `;
+    page.appendChild(meta);
+
+    // ── DIVIDER ──
+    const divider = document.createElement('div');
+    divider.className = 'divider anim-in';
+    divider.innerHTML = '<hr>';
+    page.appendChild(divider);
+
+    // ── DESCRIPTION ──
+    if (p.description) {
+      const desc = document.createElement('div');
+      desc.className = 'description anim-in';
+      desc.innerHTML = `<p>${p.description}</p>`;
+      page.appendChild(desc);
+    }
+
+    // ── SECTIONS ──
+    const sectionsEl = document.createElement('div');
+    sectionsEl.className = 'sections';
+
+    // Normalize a plain string path to a mediaItem object,
+    // detecting videos by extension.
+    function normalizeItem(item) {
+      if (typeof item !== 'string') return item;
+      return /\.(mp4|webm|mov)$/i.test(item)
+        ? { type: 'video', src: item }
+        : { type: 'image', src: item };
+    }
+
+    function appendCaption(el, section) {
+      if (!section.caption) return;
+      const cap = document.createElement('p');
+      cap.className = 'section-caption';
+      cap.textContent = section.caption;
+      el.appendChild(cap);
+    }
+
+    (p.sections || []).forEach(section => {
+      if (section.type === 'text') {
+        const el = document.createElement('div');
+        el.className = 'section-text anim-in';
+        if (section.title) {
+          const t = document.createElement('p');
+          t.className = 'section-title';
+          t.textContent = section.title;
+          el.appendChild(t);
+        }
+        const body = document.createElement('p');
+        body.innerHTML = section.content;
+        el.appendChild(body);
+        appendCaption(el, section);
+        sectionsEl.appendChild(el);
+
+      } else if (section.type === 'feature') {
+        const el = document.createElement('div');
+        el.className = 'section-feature anim-in';
+        if (section.title) {
+          const t = document.createElement('p');
+          t.className = 'section-title';
+          t.textContent = section.title;
+          el.appendChild(t);
+        }
+        const featureItem = normalizeItem(section.item);
+        const media = buildMediaEl({ ...featureItem, _feature: true });
+        if (featureItem.type === 'image' && !featureItem.ratio) {
+          media.classList.add('feature-media--natural');
+        } else {
+          media.style.setProperty('--ratio-pad', ratioPad(featureItem.ratio || '16/9'));
+        }
+        if (featureItem.type === 'image') media.classList.add('feature-media--zoomable');
+        el.appendChild(media);
+        appendCaption(el, section);
+        sectionsEl.appendChild(el);
+
+      } else if (section.type === 'grid') {
+        const el = document.createElement('div');
+        el.className = 'section-grid anim-in';
+
+        const gridItems = section.items.map(normalizeItem);
+
+        const rows = packIntoRows(gridItems, 3.5);
+        rows.forEach(rowItems => {
+          const row = document.createElement('div');
+          row.className = 'grid-row';
+          rowItems.forEach(item => {
+            const media = buildMediaEl(item, false);
+            row.appendChild(media);
+          });
+          el.appendChild(row);
+        });
+
+        appendCaption(el, section);
+        sectionsEl.appendChild(el);
+      }
+    });
+
+    page.appendChild(sectionsEl);
+
+    // ── NEXT PROJECT LINK ──
+    const currentIdx = ALL_PROJECTS.indexOf(p.key);
+    const nextKey    = ALL_PROJECTS[(currentIdx + 1) % ALL_PROJECTS.length];
+    const nextLink   = document.getElementById('nextProjectLink');
+    nextLink.href    = `project.html?key=${nextKey}`;
+
+    // ── TRIGGER CONTENT REVEAL ──
+    function revealContent() {
+      document.querySelectorAll('.anim-in').forEach((el, i) => {
+        setTimeout(() => el.classList.add('visible'), i * 80);
+      });
+    }
+
+    let __revealDone = false;
+    function startReveal() {
+      if (__revealDone) return;
+      __revealDone = true;
+      if (__vt) {
+        // VT is morphing the thumbnail → hero; reveal content once it lands.
+        __vt.finished.then(revealContent).catch(revealContent);
+      } else {
+        // Direct navigation (no VT) — animate manually with a safety fallback.
+        const safety = setTimeout(revealContent, 1000);
+        transition.playIn(heroMedia, () => {
+          clearTimeout(safety);
+          revealContent();
+        });
+      }
+    }
+
+    if (__vtFired) {
+      startReveal();
+    } else {
+      __onPageReveal = startReveal;
+      setTimeout(startReveal, 800); // fallback if pagereveal never fires
+    }
+  }
+
+  /* THEME TOGGLE */
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const isDark = document.body.classList.toggle('dark');
+    localStorage.setItem('rc_theme', isDark ? 'dark' : 'light');
+  });
+
+  /* ─── LIGHTBOX ─── */
+  const lightbox    = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+
+  function openLightbox(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  lightbox.addEventListener('click', e => {
+    if (e.target !== lightboxImg) closeLightbox();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+  });
+
+  document.addEventListener('click', e => {
+    const gridItem = e.target.closest('.grid-item');
+    if (gridItem) {
+      const img = gridItem.querySelector('img');
+      if (img) openLightbox(img.src, img.alt);
+      return;
+    }
+    const featureMedia = e.target.closest('.feature-media--zoomable');
+    if (featureMedia) {
+      const img = featureMedia.querySelector('img');
+      if (img) openLightbox(img.src, img.alt);
+    }
+  });
+</script>
+
+</body>
+</html>
