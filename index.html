@@ -52,17 +52,6 @@
   body::-webkit-scrollbar { width: 0; height: 0; background: transparent; }  /* Chrome/Safari */
   body { -ms-overflow-style: none; }           /* IE/old Edge */
 
-  /* ─── EDGE GRADIENTS ─── */
-  body::after {
-    content: '';
-    position: fixed;
-    left: 0; right: 0;
-    pointer-events: none;
-    bottom: 0;
-    height: 100px;
-    background: linear-gradient(to top, var(--bg) 0%, var(--bg-alpha0) 100%);
-    z-index: 45; /* above corners (30) and view-toggle (40), pointer-events: none so clicks still work */
-  }
   .top-gradient {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -71,7 +60,9 @@
     z-index: 45; /* below header (50), above gallery */
     pointer-events: none;
     view-transition-name: top-gradient;
+    transition: transform 300ms ease;
   }
+  .top-gradient.header-hidden { transform: translateY(-100%); }
 
   /* ─── HEADER ─── */
   header {
@@ -80,19 +71,22 @@
     padding: 28px 36px;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     z-index: 50;
     view-transition-name: site-header;
     pointer-events: none;
+    transition: transform 300ms ease;
   }
+  header.header-hidden { transform: translateY(-100%); }
   header > * { pointer-events: auto; }
   .logo {
     font-variation-settings: "wght" 700, "wdth" 100;
     font-size: 32px;
     line-height: 1;
     letter-spacing: -0.03em;
+    white-space: nowrap;
   }
-  nav { display: flex; gap: 36px; }
+  nav { display: flex; gap: 36px; align-items: center; }
   nav a {
     color: var(--ink);
     text-decoration: none;
@@ -112,9 +106,6 @@
 
   /* ─── THEME TOGGLE ─── */
   .theme-toggle {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     background: none;
     border: none;
     cursor: pointer;
@@ -303,29 +294,18 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: 40;
-    background: none;
+    background: var(--bg);
     border: none;
+    border-radius: 999px;
     cursor: pointer;
     color: var(--ink);
     font-family: inherit;
     font-size: 13px;
     font-variation-settings: "wght" 600, "wdth" 100;
-    padding: 6px 14px;
+    padding: 7px 16px;
     letter-spacing: 0.02em;
     transition: opacity 0.3s ease;
   }
-  .view-toggle::after {
-    content: "";
-    position: absolute;
-    left: 14px; right: 14px;
-    bottom: 4px;
-    height: 1px;
-    background: var(--ink);
-    transform: scaleX(0);
-    transform-origin: center;
-    transition: transform 0.4s cubic-bezier(.7,0,.3,1);
-  }
-  .view-toggle:hover::after { transform: scaleX(1); }
 
   /* ─── GRID VIEW ─── */
   .grid-view {
@@ -337,7 +317,8 @@
   }
   body.in-grid .grid-view { display: block; }
   body.in-grid .gallery { display: none; }
-  body.in-grid .corner.right { display: none; } /* hide bottom-right copyright in grid since it would overlap on long pages — we'll add a footer instead */
+  body.in-grid .corner.right { display: none; }
+  body.in-grid .corner.left  { display: none; } /* hide bottom-right copyright in grid since it would overlap on long pages — we'll add a footer instead */
 
   .grid-list {
     display: grid;
@@ -418,6 +399,8 @@
     .grid-view { display: block; padding: 80px 16px 80px; }
     .view-toggle { display: none; }
     .corner { display: none; }
+    header { padding: 28px 16px; align-items: center; }
+    .logo { font-size: clamp(14px, 4.2vw, 22px); }
   }
 
   /* ─── VIEW TRANSITIONS ─── */
@@ -454,13 +437,13 @@
   <div class="logo">
     Robbe Callewaert
   </div>
-  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
-  </button>
   <nav>
     <a href="index.html">work</a>
     <a href="info.html">info</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+    </button>
   </nav>
 </header>
 
@@ -490,12 +473,12 @@
 <div class="grid-view" id="gridView">
   <div class="grid-list" id="gridList"></div>
   <div class="grid-footer">
-    <a href="https://instagram.com" target="_blank">Instagram ↗</a>
+    <a href="https://www.instagram.com/robbe.callewaert/" target="_blank">Instagram ↗</a>
     <span>©2026 Robbe Callewaert</span>
   </div>
 </div>
 
-<div class="corner left"><a href="https://instagram.com" target="_blank">Instagram ↗</a></div>
+<div class="corner left"><a href="https://www.instagram.com/robbe.callewaert/" target="_blank">Instagram ↗</a></div>
 <div class="corner right">©2026 Robbe Callewaert</div>
 
 <button class="view-toggle" id="viewToggle">Grid</button>
@@ -818,6 +801,20 @@
     }
   }
 
+  /* SCROLL-HIDE HEADER (grid view only) */
+  (function () {
+    const header = document.querySelector('header');
+    const gradient = document.querySelector('.top-gradient');
+    let lastY = 0;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      const hide = y > lastY && y > 80 && document.body.classList.contains('in-grid');
+      header.classList.toggle('header-hidden', hide);
+      if (gradient) gradient.classList.toggle('header-hidden', hide);
+      lastY = y;
+    }, { passive: true });
+  })();
+
   /* THEME TOGGLE */
   document.getElementById('themeToggle').addEventListener('click', () => {
     const isDark = document.body.classList.toggle('dark');
@@ -846,6 +843,9 @@
   function showCarousel() {
     isCarousel = true;
     document.body.classList.remove('in-grid');
+    document.querySelector('header').classList.remove('header-hidden');
+    const grad = document.querySelector('.top-gradient');
+    if (grad) grad.classList.remove('header-hidden');
     if (!trigger && window.innerWidth > 900) buildTrigger();
     viewToggle.textContent = 'Grid';
     requestAnimationFrame(() => ScrollTrigger.refresh());

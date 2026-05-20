@@ -47,17 +47,6 @@
     overflow-x: hidden;
   }
 
-  /* ─── EDGE GRADIENTS ─── */
-  body::after {
-    content: '';
-    position: fixed;
-    left: 0; right: 0;
-    pointer-events: none;
-    bottom: 0;
-    height: 100px;
-    background: linear-gradient(to top, var(--bg) 0%, var(--bg-alpha0) 100%);
-    z-index: 25;
-  }
   .top-gradient {
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -66,7 +55,9 @@
     z-index: 99; /* just below header (100) */
     pointer-events: none;
     view-transition-name: top-gradient;
+    transition: transform 300ms ease;
   }
+  .top-gradient.header-hidden { transform: translateY(-100%); }
 
   /* ─── HEADER ─── */
   header {
@@ -76,10 +67,12 @@
     view-transition-name: site-header;
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     z-index: 100;
     mix-blend-mode: normal;
+    transition: transform 300ms ease;
   }
+  header.header-hidden { transform: translateY(-100%); }
   .logo {
     font-variation-settings: "wght" 700, "wdth" 100;
     font-size: 32px;
@@ -87,6 +80,7 @@
     letter-spacing: -0.03em;
     text-decoration: none;
     color: var(--ink);
+    white-space: nowrap;
   }
   .back-btn {
     background: none;
@@ -112,9 +106,6 @@
 
   /* ─── THEME TOGGLE ─── */
   .theme-toggle {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     background: none;
     border: none;
     cursor: pointer;
@@ -123,6 +114,11 @@
     pointer-events: auto;
     line-height: 0;
     transition: color 200ms ease;
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
   }
   .theme-toggle:hover { color: var(--ink); }
   .theme-toggle svg { width: 15px; height: 15px; display: block; }
@@ -456,6 +452,8 @@
     .meta { grid-template-columns: 1fr; gap: 20px; }
     .meta-info { text-align: left; }
     .section-grid { grid-template-columns: 1fr; }
+    header { padding: 28px 16px; align-items: center; }
+    .logo { font-size: clamp(14px, 4.2vw, 22px); }
   }
 
   /* ─── VIEW TRANSITIONS ─── */
@@ -508,16 +506,18 @@
   <a class="logo" href="index.html">
     Robbe Callewaert
   </a>
-  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
-  </button>
+  <div class="header-right">
   <button class="back-btn" id="backBtn" onclick="transition.back()">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
       <path d="M19 12H5M11 6l-6 6 6 6"/>
     </svg>
     Work
   </button>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+  </button>
+  </div>
 </header>
 
 <div class="page" id="page">
@@ -539,7 +539,7 @@
 </div>
 
 <footer class="anim-in">
-  <a href="https://instagram.com" target="_blank">Instagram ↗</a>
+  <a href="https://www.instagram.com/robbe.callewaert/" target="_blank">Instagram ↗</a>
   <a class="next-project" id="nextProjectLink" href="#">
     Next project
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -864,6 +864,20 @@
       setTimeout(startReveal, 800); // fallback if pagereveal never fires
     }
   }
+
+  /* SCROLL-HIDE HEADER */
+  (function () {
+    const header = document.querySelector('header');
+    const gradient = document.querySelector('.top-gradient');
+    let lastY = 0;
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY;
+      const hide = y > lastY && y > 80;
+      header.classList.toggle('header-hidden', hide);
+      if (gradient) gradient.classList.toggle('header-hidden', hide);
+      lastY = y;
+    }, { passive: true });
+  })();
 
   /* THEME TOGGLE */
   document.getElementById('themeToggle').addEventListener('click', () => {
