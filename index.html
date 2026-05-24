@@ -18,9 +18,9 @@
     --ink-faint: #cfcfcf;
     --surface: #f3f3f3;
 
-    --slot-w: 900px;
-    --slot-h: 900px;
-    --slot-pitch: 1140px;       /* 900 + 240 whitespace */
+    --slot-w: min(900px, calc(100vh - 320px)); /* scale down on short viewports */
+    --slot-h: var(--slot-w);                  /* keep thumbnails square */
+    --slot-pitch: calc(var(--slot-w) + 240px);
 
     --img-scale-base: 0.55;
     --img-scale-active: 1;
@@ -808,7 +808,8 @@
     let lastY = 0;
     window.addEventListener('scroll', () => {
       const y = window.scrollY;
-      const hide = y > lastY && y > 80 && document.body.classList.contains('in-grid');
+      const isMobile = window.innerWidth <= 900;
+      const hide = y > lastY && y > 80 && (document.body.classList.contains('in-grid') || isMobile);
       header.classList.toggle('header-hidden', hide);
       if (gradient) gradient.classList.toggle('header-hidden', hide);
       lastY = y;
