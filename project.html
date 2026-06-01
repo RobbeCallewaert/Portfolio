@@ -16,7 +16,7 @@
     --ink-faint:  #cfcfcf;
     --rule:       #ebebeb;
     --surface:    #f3f3f3;
-    --max-w:      1320px;
+    --max-w:      min(1320px, calc(100vh - 100px));
     --pad:        clamp(24px, 5vw, 80px);
   }
 
@@ -82,22 +82,38 @@
     color: var(--ink);
     white-space: nowrap;
   }
+  nav { display: flex; gap: 36px; align-items: center; }
+  nav a {
+    color: var(--ink);
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1;
+    font-variation-settings: "wght" 600, "wdth" 100;
+    position: relative;
+  }
+  nav a::after {
+    content: "";
+    position: absolute;
+    left: 0; bottom: -2px;
+    width: 0; height: 1px;
+    background: var(--ink);
+    transition: width 0.5s cubic-bezier(.7,0,.3,1);
+  }
+  nav a:hover::after { width: 100%; }
+
   .back-btn {
     background: none;
     border: none;
     cursor: pointer;
     font-family: inherit;
-    font-size: 13px;
-    font-variation-settings: "wght" 500, "wdth" 100;
-    color: var(--ink-soft);
+    font-size: 14px;
+    font-variation-settings: "wght" 600, "wdth" 100;
+    color: var(--ink);
     padding: 0;
     display: flex;
     align-items: center;
     gap: 8px;
-    transition: color 0.3s ease;
-    text-decoration: none;
   }
-  .back-btn:hover { color: var(--ink); }
   .back-btn svg {
     width: 14px; height: 14px;
     transition: transform 0.3s cubic-bezier(.65,0,.2,1);
@@ -114,11 +130,6 @@
     pointer-events: auto;
     line-height: 0;
     transition: color 200ms ease;
-  }
-  .header-right {
-    display: flex;
-    align-items: center;
-    gap: 24px;
   }
   .theme-toggle:hover { color: var(--ink); }
   .theme-toggle svg { width: 15px; height: 15px; display: block; }
@@ -145,7 +156,7 @@
     position: relative;
     overflow: hidden;
     background: var(--project-color, #f3f3f3);
-    border-radius: 6px;
+    border-radius: 4px;
     view-transition-name: project-hero;
   }
   /* aspect ratio box */
@@ -170,11 +181,21 @@
   .meta {
     max-width: var(--max-w);
     margin: 0 auto;
-    padding: 56px var(--pad) 0;
+    padding: 48px var(--pad) 40px;
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 40px;
+    gap: 48px;
     align-items: end;
+    border-bottom: 1px solid var(--rule);
+  }
+  .meta-client {
+    display: block;
+    font-size: 13px;
+    font-variation-settings: "wght" 400, "wdth" 100;
+    color: var(--ink-soft);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
   }
   .meta-title {
     font-variation-settings: "wght" 700, "wdth" 100;
@@ -182,65 +203,57 @@
     letter-spacing: -0.03em;
     line-height: 1;
   }
-  .meta-client {
-    font-variation-settings: "wght" 400, "wdth" 100;
-    font-size: clamp(18px, 2vw, 24px);
-    color: var(--ink-soft);
-    letter-spacing: -0.01em;
-    margin-bottom: 12px;
-  }
   .meta-info {
-    text-align: right;
+    display: flex;
+    gap: 36px;
+    align-items: flex-end;
     flex-shrink: 0;
-    align-self: start;
   }
-  .meta-info .studio {
-    display: block;
-    font-variation-settings: "wght" 400, "wdth" 100;
-    font-size: clamp(18px, 2vw, 24px);
-    color: var(--ink-soft);
-    letter-spacing: -0.01em;
-    margin-bottom: 16px;
+  .meta-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
   }
-  .meta-info .year {
-    font-variation-settings: "wght" 500, "wdth" 100;
-    font-size: 14px;
-    color: var(--ink-soft);
-    letter-spacing: 0.05em;
-    display: block;
-    margin-bottom: 6px;
-  }
-  .meta-info .role {
-    font-variation-settings: "wght" 400, "wdth" 100;
-    font-size: 14px;
+  .meta-label {
+    font-size: 10px;
+    font-variation-settings: "wght" 600, "wdth" 100;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
     color: var(--ink-faint);
-    letter-spacing: 0.02em;
   }
-  .meta-info .studio a {
+  .meta-value {
+    font-size: 14px;
+    font-variation-settings: "wght" 400, "wdth" 100;
+    color: var(--ink-soft);
+  }
+  .meta-value a {
     color: inherit;
     text-decoration: none;
     border-bottom: 1px solid transparent;
-    transition: border-color 0.3s ease, color 0.3s ease;
+    transition: border-color 0.3s ease;
   }
-  .meta-info .studio a:hover {
+  .meta-value a:hover { border-color: var(--ink-faint); }
+  .meta-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .meta-tag {
+    font-size: 11px;
+    font-variation-settings: "wght" 500, "wdth" 100;
     color: var(--ink-soft);
-    border-color: var(--ink-faint);
-  }
-  .divider {
-    max-width: var(--max-w);
-    margin: 48px auto 0;
-    padding: 0 var(--pad);
-  }
-  .divider hr {
-    border: none;
-    border-top: 1px solid var(--rule);
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 100px;
+    padding: 3px 10px;
+    white-space: nowrap;
   }
 
   /* ─── DESCRIPTION ─── */
   .description {
     max-width: var(--max-w);
     margin: 0 auto;
-    padding: 48px var(--pad);
+    padding: 40px var(--pad) 48px;
   }
   .description p {
     font-variation-settings: "wght" 400, "wdth" 100;
@@ -449,8 +462,8 @@
 
   /* ─── MOBILE ─── */
   @media (max-width: 768px) {
-    .meta { grid-template-columns: 1fr; gap: 20px; }
-    .meta-info { text-align: left; }
+    .meta { grid-template-columns: 1fr; gap: 28px; }
+    .meta-info { flex-wrap: wrap; gap: 24px; }
     .section-grid { grid-template-columns: 1fr; }
     header { padding: 28px 16px; align-items: center; }
     .logo { font-size: clamp(14px, 4.2vw, 22px); }
@@ -503,21 +516,20 @@
 <div class="top-gradient"></div>
 
 <header>
-  <a class="logo" href="index.html">
-    Robbe Callewaert
-  </a>
-  <div class="header-right">
-  <button class="back-btn" id="backBtn" onclick="transition.back()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-      <path d="M19 12H5M11 6l-6 6 6 6"/>
-    </svg>
-    Work
-  </button>
-  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
-    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-    <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
-  </button>
-  </div>
+  <a class="logo" href="index.html">Robbe Callewaert</a>
+  <nav>
+    <button class="back-btn" id="backBtn" onclick="transition.back()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <path d="M19 12H5M11 6l-6 6 6 6"/>
+      </svg>
+      work
+    </button>
+    <a href="info.html">info</a>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <svg class="icon-sun"  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41"/></svg>
+    </button>
+  </nav>
 </header>
 
 <div class="page" id="page">
@@ -714,28 +726,36 @@
     // ── META ──
     const meta = document.createElement('div');
     meta.className = 'meta anim-in';
+    const disciplineTags = (p.role || '').split(',').map(d => d.trim()).filter(Boolean)
+      .map(d => `<span class="meta-tag">${d}</span>`).join('');
     meta.innerHTML = `
-      <div>
-        <div class="meta-client">${p.client}</div>
+      <div class="meta-left">
+        <span class="meta-client">${p.client}</span>
         <h1 class="meta-title">${p.title}</h1>
       </div>
       <div class="meta-info">
-        ${p.studio ? `<span class="studio">Studio: ${
-          p.studio.url
-            ? `<a href="${p.studio.url}" target="_blank" rel="noopener">${p.studio.name}</a>`
-            : p.studio.name
-        }</span>` : ''}
-        <span class="year">${p.year || ''}</span>
-        <span class="role">${p.role || ''}</span>
+        ${p.studio ? `
+        <div class="meta-field">
+          <span class="meta-label">Studio</span>
+          <span class="meta-value">${
+            p.studio.url
+              ? `<a href="${p.studio.url}" target="_blank" rel="noopener">${p.studio.name}</a>`
+              : p.studio.name
+          }</span>
+        </div>` : ''}
+        ${p.year ? `
+        <div class="meta-field">
+          <span class="meta-label">Year</span>
+          <span class="meta-value">${p.year}</span>
+        </div>` : ''}
+        ${disciplineTags ? `
+        <div class="meta-field">
+          <span class="meta-label">Disciplines</span>
+          <div class="meta-tags">${disciplineTags}</div>
+        </div>` : ''}
       </div>
     `;
     page.appendChild(meta);
-
-    // ── DIVIDER ──
-    const divider = document.createElement('div');
-    divider.className = 'divider anim-in';
-    divider.innerHTML = '<hr>';
-    page.appendChild(divider);
 
     // ── DESCRIPTION ──
     if (p.description) {
