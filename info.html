@@ -48,6 +48,18 @@
     overflow-x: hidden;
   }
 
+  /* ─── TOP GRADIENT ─── */
+  .top-gradient {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 140px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg-alpha0) 100%);
+    z-index: 99;
+    pointer-events: none;
+    transition: transform 300ms ease;
+  }
+  .top-gradient.header-hidden { transform: translateY(-100%); }
+
   /* ─── HEADER ─── */
   header {
     position: fixed;
@@ -122,17 +134,11 @@
     position: sticky;
     top: 0;
     height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
+    overflow: hidden;
   }
   .portrait-wrap {
-    height: 50vh;
-    width: 50vh;
-    max-width: 100%;
-    border-radius: 4px;
-    overflow: hidden;
+    width: 100%;
+    height: 100%;
   }
   .portrait-wrap img {
     width: 100%;
@@ -198,7 +204,7 @@
     font-size: 16px;
     line-height: 1.75;
     color: var(--ink-soft);
-    max-width: 520px;
+    max-width: 720px;
     overflow-wrap: break-word;
   }
   .bio p strong {
@@ -374,6 +380,8 @@
 <body>
 <script>if (localStorage.getItem('rc_theme') === 'dark') document.body.classList.add('dark');</script>
 
+<div class="top-gradient"></div>
+
 <header>
   <a class="logo" href="index.html">
     Robbe Callewaert
@@ -393,7 +401,7 @@
   <!-- LEFT: portrait -->
   <div class="col-image">
     <div class="portrait-wrap">
-      <img id="portrait" src="assets/images/thumbnails/portrait.webp" alt="Robbe Callewaert">
+      <img id="portrait" src="assets/images/thumbnails/portrait_wide.webp" alt="Robbe Callewaert">
     </div>
   </div>
 
@@ -408,9 +416,9 @@
 
     <div class="bio anim" id="a2">
       <a class="bio-email" href="mailto:hello@robbecallewaert.com">hello@robbecallewaert.com</a>
-      <p>Robbe is a <strong>3D and motion design artist</strong> with over eight years of experience creating concept-driven work for beauty, fashion, and tech clients. His practice is rooted in 3D and animation, built on a foundation in illustration, graphic design, and 2D motion.</p>
+      <p>Robbe is a 3D and motion design artist with over eight years of experience creating concept-driven work for beauty, fashion, and tech clients. His practice is rooted in 3D and animation, built on a foundation in illustration, graphic design, and 2D motion.</p>
       <br>
-      <p>After several years at UK studio <strong><a href="https://www.instagram.com/ilovedust/" target="_blank" rel="noopener noreferrer">ILOVEDUST</a></strong> — contributing to campaigns for Apple, Nike, Spotify, and Google — he went freelance in 2022 and now works from <strong>Prague</strong> with studios like <a href="https://www.zunc.studio/" target="_blank" rel="noopener noreferrer">ZUNC</a>, <a href="https://www.instagram.com/sucukundbratwurst/" target="_blank" rel="noopener noreferrer">Sucuk&nbsp;&amp;&nbsp;Bratwurst</a>, and <a href="https://softpower.global/" target="_blank" rel="noopener noreferrer">Softpower</a>.</p>
+      <p>After several years at UK studio <a href="https://www.instagram.com/ilovedust/" target="_blank" rel="noopener noreferrer">ILOVEDUST</a> — contributing to campaigns for Apple, Nike, Spotify, and Google — he went freelance in 2022 and now works from Prague with studios like <a href="https://www.zunc.studio/" target="_blank" rel="noopener noreferrer">ZUNC</a>, <a href="https://www.instagram.com/sucukundbratwurst/" target="_blank" rel="noopener noreferrer">Sucuk&nbsp;&amp;&nbsp;Bratwurst</a>, and <a href="https://softpower.global/" target="_blank" rel="noopener noreferrer">Softpower</a>.</p>
 
     </div>
 

@@ -196,57 +196,50 @@
   }
 
   /* ─── LABELS ───
-     The labels sit below the active thumb. Each row clips overflow:hidden so
-     the slide-up animation is masked. Two stacked spans (.current + .next)
-     swap during transitions.
+     Overlaid on the bottom-left of the active card. Each row clips overflow:hidden
+     so the slide-up animation is masked. Two stacked spans (.current + .next) swap.
   */
-  .labels {
+  .thumb-gradient {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, calc(-50% + var(--slot-h) / 2 + 56px));
-    z-index: 5;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 55%);
+    opacity: 0;
+    transition: opacity 400ms ease;
     pointer-events: none;
-    text-align: center;
+    z-index: 2;
   }
-  .label-row {
-    height: 1.4em;
-    overflow: hidden;
-    white-space: nowrap;
-    /* the row itself is just a clipping window */
+  .slot.is-hot .thumb-gradient { opacity: 1; }
+
+  .card-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 60px 36px 32px;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 400ms ease;
   }
-  .brand-line {
-    font-variation-settings: "wght" 700, "wdth" 100;
-    font-size: 32px;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  .title-line {
-    font-variation-settings: "wght" 400, "wdth" 100;
-    font-size: 18px;
-    color: var(--ink-soft);
-    margin-top: 10px;
-  }
-  .label-row .stack {
-    display: flex;
-    flex-direction: column;
-    /* transform animated via JS-controlled class — no auto-transition while we're resetting */
-  }
-  .label-row.animating .stack {
-    transition: transform 360ms cubic-bezier(.65,0,.2,1);
-  }
-  .label-row.animating span {
-    transition: opacity 360ms cubic-bezier(.65,0,.2,1);
-  }
-  .label-row span {
+  .slot.is-hot .card-label { opacity: 1; }
+  .card-brand {
     display: block;
-    line-height: 1.4em;
-    height: 1.4em;
+    font-variation-settings: "wght" 400, "wdth" 100;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.65);
+    margin-bottom: 6px;
   }
-  .label-row .next { opacity: 0; }
-  .label-row.swapping .stack { transform: translateY(-1.4em); }
-  .label-row.swapping .current { opacity: 0; }
-  .label-row.swapping .next    { opacity: 1; }
+  .card-title {
+    display: block;
+    font-variation-settings: "wght" 700, "wdth" 100;
+    font-size: clamp(22px, 3vw, 42px);
+    letter-spacing: -0.03em;
+    line-height: 1;
+    color: #ffffff;
+    transform: translateY(10px);
+    transition: transform 500ms cubic-bezier(.65,0,.2,1);
+  }
+  .slot.is-hot .card-title { transform: translateY(0); }
 
   /* ─── CURSOR ─── */
   .cursor {
@@ -383,13 +376,12 @@
   .grid-footer a:hover { border-color: var(--ink-soft); color: var(--ink); }
 
   /* ─── REVEAL ─── */
-  .strip, .corner, header, .labels, .view-toggle {
+  .strip, .corner, header, .view-toggle {
     opacity: 0;
     animation: fadeIn 1s cubic-bezier(.65,0,.2,1) forwards;
   }
   header { animation-delay: 0.05s; }
   .strip { animation-delay: 0.2s; }
-  .labels { animation-delay: 0.4s; }
   .corner, .view-toggle { animation-delay: 0.6s; }
   @keyframes fadeIn { to { opacity: 1; } }
 
@@ -454,20 +446,6 @@
   <div class="stage">
     <div class="strip" id="strip"></div>
 
-    <div class="labels">
-      <div class="label-row brand-line animating" id="brandRow">
-        <div class="stack">
-          <span class="current">The North Face</span>
-          <span class="next"></span>
-        </div>
-      </div>
-      <div class="label-row title-line animating" id="titleRow">
-        <div class="stack">
-          <span class="current">Altamesa 500 V2</span>
-          <span class="next"></span>
-        </div>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -498,8 +476,6 @@
 
   const projN = projects.length;
   const strip = document.getElementById('strip');
-  const brandRow = document.getElementById('brandRow');
-  const titleRow = document.getElementById('titleRow');
   const cursor = document.getElementById('cursor');
 
   function getDims() {
@@ -533,6 +509,11 @@
           ? `<img src="${p.thumb}" alt="${p.brand}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">`
           : `<div class="thumb-placeholder">${p.brand}</div>`
         }
+        <div class="thumb-gradient"></div>
+        <div class="card-label">
+          <span class="card-brand">${p.brand}</span>
+          <span class="card-title">${p.title}</span>
+        </div>
       </div>
     `;
     strip.appendChild(slot);
@@ -597,9 +578,6 @@
       slots[i].classList.toggle('is-hot', i === hotIdx);
     }
 
-    const projectIdx = ((Math.round(state.pos) % projN) + projN) % projN;
-    const p = projects[projectIdx];
-    if (p.key !== currentBrandKey) swapLabels(p);
   }
 
   /* GSAP SCRUB */
@@ -701,76 +679,6 @@
     else if (trigger.progress >= 1 - 1e-5 && e.deltaY > 0) wrapForward(trigger);
   }, { passive: true });
 
-  /* ─── LABELS — fixed flash bug ───
-     The flash was caused by my old reset logic: I removed `swapping`, set
-     `transition: none`, wrote new text, then waited a frame to restore
-     transitions. During the "transition: none" frame, the stack/spans
-     snapped to rest position visibly.
-
-     New approach: keep transitions on permanently (via .animating class).
-     To swap, I just shuffle which span has `.current` vs `.next` content
-     and toggle the `.swapping` class. Critically, I use a `flipped` flag
-     to alternate which span is "current" each cycle, so the resting state
-     after a swap doesn't require any reset — it's already correct.
-
-     Cycle:
-       Initial: stack at translateY(0), .current visible, .next hidden.
-       Swap to project Y:
-         - put Y's text into .next
-         - add .swapping class → stack slides up, .current fades, .next fades in
-       After 360ms, the SWAP IS COMPLETE — but the stack is still translated
-       up. So we then:
-         - turn OFF .animating (transitions disabled)
-         - remove .swapping (stack snaps back to translateY(0))
-         - move Y's text into .current, clear .next
-         - force reflow (read offsetHeight)
-         - turn .animating back on
-       Because the snap happens with transitions DISABLED and the offsetHeight
-       read forces a synchronous layout flush, the snap is invisible — the
-       browser commits the new state in one frame, never showing the
-       intermediate.
-  */
-  let currentBrandKey = projects[0].key;
-  let labelTimer = null;
-  function swapLabels(p) {
-    if (p.key === currentBrandKey) return;
-    currentBrandKey = p.key;
-
-    if (labelTimer) clearTimeout(labelTimer);
-
-    // Stage 1: load new text into .next slot, trigger animation
-    brandRow.querySelector('.next').textContent = p.brand;
-    titleRow.querySelector('.next').textContent = p.title;
-    brandRow.classList.add('swapping');
-    titleRow.classList.add('swapping');
-
-    // Stage 2: after animation completes, do the silent reset
-    labelTimer = setTimeout(() => {
-      // freeze: turn off transitions
-      brandRow.classList.remove('animating');
-      titleRow.classList.remove('animating');
-
-      // remove the swapping class — stack snaps to translateY(0) instantly
-      brandRow.classList.remove('swapping');
-      titleRow.classList.remove('swapping');
-
-      // promote .next text → .current; clear .next
-      brandRow.querySelector('.current').textContent = p.brand;
-      brandRow.querySelector('.next').textContent = '';
-      titleRow.querySelector('.current').textContent = p.title;
-      titleRow.querySelector('.next').textContent = '';
-
-      // force the browser to commit all the above in one synchronous layout
-      // — `offsetHeight` is a layout-flushing property
-      void brandRow.offsetHeight;
-      void titleRow.offsetHeight;
-
-      // re-enable transitions for next swap
-      brandRow.classList.add('animating');
-      titleRow.classList.add('animating');
-    }, 380); // a touch longer than the 360ms transition to be safe
-  }
-
   /* CLICK → transition to project page */
   strip.addEventListener('click', (e) => {
     const slot = e.target.closest('.slot');
@@ -794,7 +702,7 @@
       // For VT back-navigation: reveal the carousel instantly (skip the
       // fade-in animations so the snapshot is fully opaque) and mark the
       // center thumbnail as the morph target for the hero → thumb morph.
-      document.querySelectorAll('.strip, header, .labels, .corner, .view-toggle')
+      document.querySelectorAll('.strip, header, .corner, .view-toggle')
         .forEach(el => { el.style.animation = 'none'; el.style.opacity = '1'; });
       const focalSlot = slots[centerListIdx + idx];
       if (focalSlot) {
