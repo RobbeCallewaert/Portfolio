@@ -561,6 +561,8 @@
   const SCALE_BASE = 0.55;
   const SCALE_ACTIVE = 1.0;
 
+  let prevHotIdx = -1;
+
   function applyFrame() {
     const { slotPitch } = dims;
     const wrapped = ((state.pos % projN) + projN) % projN;
@@ -580,10 +582,28 @@
       thumbs[i].style.setProperty('--scale', scale);
       if (d < hotDist) { hotDist = d; hotIdx = i; }
     }
-    for (let i = 0; i < slots.length; i++) {
-      slots[i].classList.toggle('is-hot', i === hotIdx);
-    }
+    if (hotIdx !== prevHotIdx) {
+      const isFirst     = prevHotIdx === -1;
+      const sameProject = !isFirst && slots[hotIdx].dataset.key === slots[prevHotIdx].dataset.key;
 
+      if (isFirst || sameProject) {
+        // Suppress card-label/gradient transitions: on first render (strip is
+        // still fading in) and when the infinite-scroll wrap swaps between two
+        // slots showing the same project (avoids a visible label flash).
+        const targets = isFirst ? [slots[hotIdx]] : [slots[hotIdx], slots[prevHotIdx]];
+        const els = targets.flatMap(s => [
+          s.querySelector('.card-label'),
+          s.querySelector('.thumb-gradient'),
+        ]).filter(Boolean);
+        els.forEach(el => { el.style.transition = 'none'; });
+        for (let i = 0; i < slots.length; i++) slots[i].classList.toggle('is-hot', i === hotIdx);
+        requestAnimationFrame(() => els.forEach(el => { el.style.transition = ''; }));
+      } else {
+        for (let i = 0; i < slots.length; i++) slots[i].classList.toggle('is-hot', i === hotIdx);
+      }
+
+      prevHotIdx = hotIdx;
+    }
   }
 
   /* GSAP SCRUB */
