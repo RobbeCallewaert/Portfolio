@@ -236,10 +236,15 @@
     letter-spacing: -0.03em;
     line-height: 1;
     color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
     transform: translateY(10px);
     transition: transform 500ms cubic-bezier(.65,0,.2,1);
   }
   .slot.is-hot .card-title { transform: translateY(0); }
+  @media (max-width: 1300px) {
+    .card-title { font-size: clamp(12px, 1.8vw, 22px); }
+  }
 
   /* ─── CURSOR ─── */
   .cursor {
