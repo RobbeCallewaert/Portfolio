@@ -21,7 +21,7 @@
  */
 
 var PROJECT = {
-  key:         'vitraPanton',
+  key:         'vitrapanton',
   client:      'Vitra',
   studio: { name: 'Sucuk & Bratwurst', url: 'https://sucukundbratwurst.de/' },
   title:       'Panton Cubes',

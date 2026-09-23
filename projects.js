@@ -1,5 +1,5 @@
 window.PROJECTS = [
-  { key: 'vitraPanton',   brand: 'Vitra',           title: 'Panton Cubes',                 color: '#ff6969', thumb: 'assets/images/thumbnails/sucuk-vitra-panton_cubes-hero.png' },
+  { key: 'vitrapanton',   brand: 'Vitra',           title: 'Panton Cubes',                 color: '#ff6969', thumb: 'assets/images/thumbnails/sucuk-vitra-panton_cubes-hero.png' },
   { key: 'altamesa',      brand: 'The North Face',  title: 'Altamesa 500 V2',              color: '#403450', thumb: 'assets/images/thumbnails/TNF_Altamesa.webp' },
   { key: 'navitimerB19',  brand: 'Breitling',       title: 'Navitimer B19',                color: '#d9882e', thumb: 'assets/images/thumbnails/Breitling_B19.webp' },
   { key: 'mambacita',     brand: 'Nike Basketball', title: 'Mambacita',                    color: '#b4b8c5', thumb: 'assets/images/thumbnails/Nike_Mambacita.webp' },
